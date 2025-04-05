@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIreadsU - AI 懂你</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#7C3AED',
+secondary: '#E5E7EB'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.search-result {
+display: none;
+}
+.search-result.active {
+display: block;
+}
+.modal {
+display: none;
+}
+.modal.active {
+display: flex;
+}
+.follow-btn.followed {
+background-color: #f3f4f6;
+border-color: #e5e7eb;
+color: #6b7280;
+}
+.follow-btn.followed:hover {
+background-color: #fee2e2;
+border-color: #fecaca;
+color: #ef4444;
+}
+.follow-btn.followed:hover::before {
+content: '取消关注';
+}
+.toast {
+position: fixed;
+top: 20px;
+right: 20px;
+padding: 12px 24px;
+background: rgba(0,0,0,0.8);
+color: white;
+border-radius: 8px;
+z-index: 1000;
+opacity: 0;
+transition: opacity 0.3s ease;
+}
+.toast.active {
+opacity: 1;
+}
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div id="toast" class="toast"></div>
+<div id="unfollowModal" class="modal fixed inset-0 bg-black/50 items-center justify-center">
+<div class="bg-white !rounded-button p-6 max-w-md w-full mx-4">
+<h3 class="text-xl font-medium mb-4">取消关注</h3>
+<p class="text-gray-600 mb-6">确定要取消关注该用户吗？</p>
+<div class="flex gap-4">
+<button onclick="confirmUnfollow()" class="flex-1 py-2 bg-red-500 text-white !rounded-button hover:bg-red-600">确定</button>
+<button onclick="hideUnfollowModal()" class="flex-1 py-2 border border-gray-200 !rounded-button hover:bg-gray-50">取消</button>
+</div>
+</div>
+</div>
+<div id="home" class="min-h-screen flex flex-col">
+<header class="py-4 px-8 flex justify-between items-center">
+<h1 class="text-3xl font-['Pacifico'] text-primary">AIreadsU</h1>
+<nav class="flex items-center gap-6">
+<a href="#" class="text-gray-600 hover:text-primary">产品</a>
+<a href="#" class="text-gray-600 hover:text-primary">解决方案</a>
+<a href="#" class="text-gray-600 hover:text-primary">价格</a>
+<button class="px-6 py-2 bg-primary text-white !rounded-button hover:bg-primary/90">登录</button>
+</nav>
+</header>
+<main class="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
+<h2 class="text-5xl font-bold mb-3 text-center">AI 懂你的企业搜索引擎</h2>
+<p class="text-gray-600 mb-12 text-center max-w-2xl">让企业知识管理更智能，让每个问题都能找到最优解答</p>
+<div class="w-full max-w-3xl relative">
+<div class="relative">
+<input type="text" id="searchInput" placeholder="AI 懂你，输入任何问题..." class="w-full h-16 pl-6 pr-32 text-lg border-2 border-gray-200 !rounded-button focus:border-primary focus:outline-none">
+<div class="absolute right-2 top-2 flex gap-2">
+<button class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-primary bg-gray-50 !rounded-button">
+<i class="ri-mic-line text-xl"></i>
+</button>
+<button onclick="showSearchResult()" class="px-6 h-12 bg-primary text-white flex items-center gap-2 !rounded-button hover:bg-primary/90">
+<i class="ri-search-line"></i>
+搜索
+</button>
+</div>
+</div>
+<div class="mt-6 flex flex-wrap gap-2 justify-center">
+<span class="px-4 py-2 bg-white !rounded-button text-sm text-gray-600 cursor-pointer hover:bg-gray-50"># 企业知识库</span>
+<span class="px-4 py-2 bg-white !rounded-button text-sm text-gray-600 cursor-pointer hover:bg-gray-50"># 智能客服</span>
+<span class="px-4 py-2 bg-white !rounded-button text-sm text-gray-600 cursor-pointer hover:bg-gray-50"># 数据分析</span>
+<span class="px-4 py-2 bg-white !rounded-button text-sm text-gray-600 cursor-pointer hover:bg-gray-50"># 业务流程</span>
+</div>
+</div>
+</main>
+</div>
+<div id="searchResult" class="search-result min-h-screen">
+<header class="py-3 px-8 border-b bg-white sticky top-0 z-10">
+<div class="flex items-center gap-8 max-w-7xl mx-auto">
+<h1 class="text-2xl font-['Pacifico'] text-primary">AIreadsU</h1>
+<div class="flex-1 relative">
+<input type="text" class="w-full h-12 pl-4 pr-12 text-sm border border-gray-200 !rounded-button focus:border-primary focus:outline-none" value="如何提高团队协作效率？">
+<button class="absolute right-2 top-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-search-line"></i>
+</button>
+</div>
+<button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+<i class="ri-user-line text-gray-600"></i>
+</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-8 py-6 grid grid-cols-12 gap-6">
+<aside class="col-span-3">
+<div class="sticky top-24">
+<div class="bg-white !rounded-button p-4 mb-4">
+<h3 class="font-medium mb-3">推广服务</h3>
+<div class="space-y-4">
+<div class="aspect-video rounded overflow-hidden bg-gray-100">
+<img src="https://public.readdy.ai/ai/img_res/470f87ecbe1021563722a4388256bc85.jpg" class="w-full h-full object-cover" alt="广告图片">
+</div>
+<h4 class="text-sm font-medium">企业协作解决方案</h4>
+<p class="text-xs text-gray-500">提升30%团队效率，降低50%沟通成本</p>
+<a href="https://readdy.ai/home/9ab9ccd9-04c6-4a10-942f-e58eb84ee22d/44ad8fcd-a49b-436d-992e-1d3d1edacfde" data-readdy="true">
+  <button class="w-full py-2 bg-primary text-white text-sm !rounded-button">了解更多</button>
+</a>
+</div>
+</div>
+</div>
+</aside>
+<div class="col-span-6 space-y-6">
+<div class="bg-white !rounded-button p-6">
+<div class="flex items-start gap-4 mb-4">
+<img src="https://public.readdy.ai/ai/img_res/1233d60a0b020dfdebf786df07f4f7da.jpg" class="w-12 h-12 rounded-full" alt="作者头像">
+<div>
+<h3 class="font-medium">张美玲</h3>
+<p class="text-sm text-gray-500">企业管理咨询顾问 @ 德勤咨询</p>
+</div>
+<button onclick="showRelationship()" class="ml-auto text-sm text-primary">查看关系链</button>
+</div>
+<div class="space-y-4">
+<p>根据我多年的咨询经验，提高团队协作效率可以从以下几个方面着手：</p>
+<ol class="list-decimal pl-4 space-y-2">
+<li>建立清晰的目标和责任制</li>
+<li>选择合适的协作工具平台</li>
+<li>优化会议流程和沟通机制</li>
+<li>建立有效的知识管理系统</li>
+<li>定期进行团队建设活动</li>
+</ol>
+<div class="text-sm text-gray-500">
+参考来源：《现代企业管理实践》、《团队效能提升指南》
+</div>
+</div>
+</div>
+<div class="bg-white !rounded-button p-6">
+<div class="flex items-start gap-4 mb-4">
+<img src="https://public.readdy.ai/ai/img_res/8819b71b5efee387f7a823e64fa7fcad.jpg" class="w-12 h-12 rounded-full" alt="作者头像">
+<div>
+<h3 class="font-medium">李志远</h3>
+<p class="text-sm text-gray-500">敏捷教练 @ 阿里巴巴</p>
+</div>
+<button onclick="showRelationship()" class="ml-auto text-sm text-primary">查看关系链</button>
+</div>
+<div class="space-y-4">
+<p>作为敏捷教练，我建议从敏捷方法论出发：</p>
+<ul class="list-disc pl-4 space-y-2">
+<li>实施每日站会制度</li>
+<li>使用看板管理任务流程</li>
+<li>建立迭代反馈机制</li>
+<li>推行结对编程实践</li>
+</ul>
+<div class="text-sm text-gray-500">
+参考来源：《敏捷实践指南》、《Scrum精髓》
+</div>
+</div>
+</div>
+</div>
+<aside class="col-span-3">
+<div class="sticky top-24 bg-white !rounded-button p-4">
+<h3 class="font-medium mb-4">相关推荐</h3>
+<div class="space-y-4">
+<div class="flex gap-3 items-center">
+<img src="https://public.readdy.ai/ai/img_res/1a346384bc1248fcf4d681d91e683800.jpg" class="w-10 h-10 rounded-full" alt="推荐作者头像">
+<div class="flex-1">
+<h4 class="text-sm font-medium">王建国</h4>
+<p class="text-xs text-gray-500">项目管理专家 @ 华为</p>
+</div>
+<button onclick="toggleFollow(this)" class="follow-btn px-3 py-1 border border-primary text-primary text-sm !rounded-button hover:bg-gray-50">关注</button>
+</div>
+<div class="flex gap-3 items-center">
+<img src="https://public.readdy.ai/ai/img_res/96777b74308535100e88dc5c0d38582a.jpg" class="w-10 h-10 rounded-full" alt="推荐作者头像">
+<div class="flex-1">
+<h4 class="text-sm font-medium">林晓华</h4>
+<p class="text-xs text-gray-500">人力资源总监 @ 腾讯</p>
+</div>
+<button onclick="toggleFollow(this)" class="follow-btn px-3 py-1 border border-primary text-primary text-sm !rounded-button hover:bg-gray-50">关注</button>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+<div id="relationshipModal" class="modal fixed inset-0 bg-black/50 items-center justify-center">
+<div class="bg-white !rounded-button p-6 max-w-2xl w-full mx-4">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-medium">关系链分析</h3>
+<button onclick="hideRelationship()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+<div class="space-y-6">
+<div class="grid grid-cols-3 gap-4 text-center">
+<div class="bg-gray-50 p-4 !rounded-button">
+<div class="text-2xl font-medium text-primary">3</div>
+<div class="text-sm text-gray-600">共同关注</div>
+</div>
+<div class="bg-gray-50 p-4 !rounded-button">
+<div class="text-2xl font-medium text-primary">85%</div>
+<div class="text-sm text-gray-600">专业领域重合</div>
+</div>
+<div class="bg-gray-50 p-4 !rounded-button">
+<div class="text-2xl font-medium text-primary">12</div>
+<div class="text-sm text-gray-600">互动次数</div>
+</div>
+</div>
+<div>
+<h4 class="font-medium mb-3">共同话题</h4>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-gray-100 !rounded-button text-sm">团队管理</span>
+<span class="px-3 py-1 bg-gray-100 !rounded-button text-sm">敏捷开发</span>
+<span class="px-3 py-1 bg-gray-100 !rounded-button text-sm">项目管理</span>
+<span class="px-3 py-1 bg-gray-100 !rounded-button text-sm">企业文化</span>
+</div>
+</div>
+<div>
+<h4 class="font-medium mb-3">最近互动</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-3 text-sm">
+<span class="text-gray-500">2025-03-20</span>
+<span>点赞了文章《如何打造高效研发团队》</span>
+</div>
+<div class="flex items-center gap-3 text-sm">
+<span class="text-gray-500">2025-03-18</span>
+<span>评论了文章《企业知识管理最佳实践》</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+function showSearchResult() {
+document.getElementById('home').style.display = 'none';
+document.getElementById('searchResult').classList.add('active');
+}
+function showRelationship() {
+document.getElementById('relationshipModal').classList.add('active');
+}
+function hideRelationship() {
+document.getElementById('relationshipModal').classList.remove('active');
+}
+let currentBtn = null;
+function toggleFollow(btn) {
+if (!btn.classList.contains('followed')) {
+btn.classList.add('followed');
+btn.textContent = '已关注';
+showToast('关注成功');
+} else {
+currentBtn = btn;
+document.getElementById('unfollowModal').classList.add('active');
+}
+}
+function confirmUnfollow() {
+if (currentBtn) {
+currentBtn.classList.remove('followed');
+currentBtn.textContent = '关注';
+showToast('已取消关注');
+currentBtn = null;
+}
+hideUnfollowModal();
+}
+function hideUnfollowModal() {
+document.getElementById('unfollowModal').classList.remove('active');
+}
+function showToast(message) {
+const toast = document.getElementById('toast');
+toast.textContent = message;
+toast.classList.add('active');
+setTimeout(() => {
+toast.classList.remove('active');
+}, 2000);
+}
+</script>
+</body>
+</html>
