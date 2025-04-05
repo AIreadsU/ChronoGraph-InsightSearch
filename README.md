@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/e617cdc8-8344-4f1f-99c0-a59344028fce)#  时序图谱洞察引擎 ChronoGraph-InsightSearch
+#  时序图谱洞察引擎 ChronoGraph-InsightSearch
 
 中文名称：时序图谱洞察引擎
 英文名称：ChronoGraph InsightSearch
@@ -17,7 +17,7 @@
  一、背景与挑战
 
 在企业内部，员工每天产生大量的聊天记录、会议纪要、项目文件等非结构化数据。这些数据分散在多个系统中，缺乏统一的管理和检索机制。传统的搜索工具依赖关键词匹配，无法理解数据之间的复杂关系，导致信息检索效率低下。此外，随着企业规模的扩大，数据量的快速增长也对存储和处理能力提出了更高要求。
-
+![image](https://github.com/user-attachments/assets/e617cdc8-8344-4f1f-99c0-a59344028fce)
  
 企业AI搜索大脑的目标是通过构建动态的知识图谱，连接员工、数据和业务流程，实现高效的信息检索和智能推理。然而，构建这样一个系统面临以下挑战：
 1. 数据的动态性和时效性：企业数据是动态变化的，需要实时更新和分析。
