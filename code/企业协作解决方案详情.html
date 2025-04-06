@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>企业协作解决方案 - AIreadsU</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#7C3AED',
+secondary: '#E9D5FF'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.modal {
+display: none;
+}
+.modal.active {
+display: flex;
+}
+</style>
+</head>
+<body class="bg-gray-50">
+<div id="consultModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+<div class="bg-white !rounded-button p-6 max-w-md w-full mx-4">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-medium">在线咨询</h3>
+<button onclick="hideConsultModal()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+<form onsubmit="submitConsult(event)" class="space-y-4">
+<div>
+<label class="block text-sm font-medium mb-2">姓名</label>
+<input required type="text" class="w-full px-4 py-2 border border-gray-200 !rounded-button" placeholder="请输入您的姓名">
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">联系电话</label>
+<input required type="tel" class="w-full px-4 py-2 border border-gray-200 !rounded-button" placeholder="请输入您的联系电话">
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">公司名称</label>
+<input required type="text" class="w-full px-4 py-2 border border-gray-200 !rounded-button" placeholder="请输入您的公司名称">
+</div>
+<div>
+<label class="block text-sm font-medium mb-2">咨询内容</label>
+<textarea required class="w-full px-4 py-2 border border-gray-200 !rounded-button h-24" placeholder="请简要描述您的需求"></textarea>
+</div>
+<button type="submit" class="w-full py-2 bg-primary text-white !rounded-button hover:bg-primary/90">提交咨询</button>
+</form>
+</div>
+</div>
+
+<header class="bg-white border-b sticky top-0 z-40">
+<div class="max-w-7xl mx-auto px-8 flex justify-between items-center h-16">
+<div class="flex items-center gap-12">
+<h1 class="text-2xl font-['Pacifico'] text-primary">AIreadsU</h1>
+<nav class="flex gap-8">
+<a href="https://readdy.ai/home/9ab9ccd9-04c6-4a10-942f-e58eb84ee22d/74dec174-cef8-4967-b3d0-31f18b2659de" data-readdy="true" class="text-gray-600 hover:text-primary">返回搜索</a>
+<a href="#" class="text-gray-600 hover:text-primary">产品</a>
+<a href="#" class="text-gray-600 hover:text-primary">解决方案</a>
+<a href="#" class="text-gray-600 hover:text-primary">价格</a>
+</nav>
+</div>
+<button class="px-6 py-2 bg-primary text-white !rounded-button hover:bg-primary/90">登录</button>
+</div>
+</header>
+
+<div class="bg-gradient-to-br from-primary/5 to-secondary/10 py-20">
+<div class="max-w-7xl mx-auto px-8">
+<div class="flex items-center gap-20">
+<div class="flex-1">
+<h2 class="text-4xl font-bold mb-6">全方位的企业协作解决方案</h2>
+<p class="text-lg text-gray-600 mb-8">提升 30% 团队效率，降低 50% 沟通成本，让企业协作更简单高效</p>
+<div class="flex gap-4">
+<button onclick="showConsultModal()" class="px-8 py-3 bg-primary text-white !rounded-button hover:bg-primary/90">免费咨询</button>
+<button class="px-8 py-3 border border-primary text-primary !rounded-button hover:bg-gray-50">查看演示</button>
+</div>
+</div>
+<div class="flex-1">
+<img src="https://public.readdy.ai/ai/img_res/5e6c8257aa3ec975b25fd443cf75f93d.jpg" class="w-full rounded-lg shadow-xl" alt="协作场景">
+</div>
+</div>
+</div>
+</div>
+
+<div class="py-20">
+<div class="max-w-7xl mx-auto px-8">
+<h2 class="text-3xl font-bold text-center mb-16">核心功能特点</h2>
+<div class="grid grid-cols-3 gap-8">
+<div class="bg-white p-8 !rounded-button">
+<div class="w-12 h-12 bg-primary/10 !rounded-button flex items-center justify-center mb-6">
+<i class="ri-team-line text-xl text-primary"></i>
+</div>
+<h3 class="text-xl font-medium mb-4">实时协作</h3>
+<p class="text-gray-600">支持多人同时编辑文档，实时查看变更，提升团队协作效率</p>
+</div>
+<div class="bg-white p-8 !rounded-button">
+<div class="w-12 h-12 bg-primary/10 !rounded-button flex items-center justify-center mb-6">
+<i class="ri-file-search-line text-xl text-primary"></i>
+</div>
+<h3 class="text-xl font-medium mb-4">智能搜索</h3>
+<p class="text-gray-600">基于 AI 的智能搜索引擎，快速定位所需文档和信息</p>
+</div>
+<div class="bg-white p-8 !rounded-button">
+<div class="w-12 h-12 bg-primary/10 !rounded-button flex items-center justify-center mb-6">
+<i class="ri-shield-check-line text-xl text-primary"></i>
+</div>
+<h3 class="text-xl font-medium mb-4">安全可控</h3>
+<p class="text-gray-600">多重权限管理，数据加密存储，确保企业信息安全</p>
+</div>
+</div>
+</div>
+</div>
+
+<div class="py-20 bg-white">
+<div class="max-w-7xl mx-auto px-8">
+<h2 class="text-3xl font-bold text-center mb-16">客户使用数据</h2>
+<div class="h-80" id="dataChart"></div>
+</div>
+</div>
+
+<div class="py-20">
+<div class="max-w-7xl mx-auto px-8">
+<h2 class="text-3xl font-bold text-center mb-16">价格方案</h2>
+<div class="grid grid-cols-3 gap-8">
+<div class="bg-white p-8 !rounded-button border-2 border-transparent hover:border-primary/20">
+<h3 class="text-xl font-medium mb-2">基础版</h3>
+<div class="text-3xl font-bold mb-6">¥ 299<span class="text-base font-normal text-gray-500">/月</span></div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>支持 50 人团队</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>基础协作功能</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>100GB 存储空间</span>
+</li>
+</ul>
+<button onclick="showConsultModal()" class="w-full py-2 border border-primary text-primary !rounded-button hover:bg-gray-50">立即咨询</button>
+</div>
+<div class="bg-white p-8 !rounded-button border-2 border-primary relative">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm !rounded-button">推荐</div>
+<h3 class="text-xl font-medium mb-2">企业版</h3>
+<div class="text-3xl font-bold mb-6">¥ 999<span class="text-base font-normal text-gray-500">/月</span></div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>支持 200 人团队</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>全部协作功能</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>1TB 存储空间</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>高级权限管理</span>
+</li>
+</ul>
+<button onclick="showConsultModal()" class="w-full py-2 bg-primary text-white !rounded-button hover:bg-primary/90">立即咨询</button>
+</div>
+<div class="bg-white p-8 !rounded-button border-2 border-transparent hover:border-primary/20">
+<h3 class="text-xl font-medium mb-2">旗舰版</h3>
+<div class="text-3xl font-bold mb-6">¥ 2999<span class="text-base font-normal text-gray-500">/月</span></div>
+<ul class="space-y-4 mb-8">
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>无限人数</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>全部功能</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>无限存储空间</span>
+</li>
+<li class="flex items-center gap-2">
+<i class="ri-check-line text-green-500"></i>
+<span>专属客户经理</span>
+</li>
+</ul>
+<button onclick="showConsultModal()" class="w-full py-2 border border-primary text-primary !rounded-button hover:bg-gray-50">立即咨询</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="fixed bottom-8 right-8 z-50">
+<button onclick="showConsultModal()" class="w-14 h-14 bg-primary text-white !rounded-button hover:bg-primary/90 flex items-center justify-center shadow-lg">
+<i class="ri-customer-service-2-line text-xl"></i>
+</button>
+</div>
+
+<script>
+function showConsultModal() {
+document.getElementById('consultModal').classList.add('active');
+}
+
+function hideConsultModal() {
+document.getElementById('consultModal').classList.remove('active');
+}
+
+function submitConsult(e) {
+e.preventDefault();
+hideConsultModal();
+const toast = document.createElement('div');
+toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 !rounded-button';
+toast.textContent = '提交成功，我们会尽快与您联系';
+document.body.appendChild(toast);
+setTimeout(() => toast.remove(), 3000);
+}
+
+const chart = echarts.init(document.getElementById('dataChart'));
+chart.setOption({
+animation: false,
+tooltip: {
+trigger: 'axis',
+backgroundColor: 'rgba(255, 255, 255, 0.9)',
+textStyle: {
+color: '#1f2937'
+}
+},
+grid: {
+top: 10,
+right: 10,
+bottom: 20,
+left: 30,
+containLabel: true
+},
+xAxis: {
+type: 'category',
+data: ['1月', '2月', '3月', '4月', '5月', '6月']
+},
+yAxis: {
+type: 'value'
+},
+series: [{
+name: '协作效率提升',
+type: 'line',
+smooth: true,
+data: [20, 32, 41, 54, 60, 80],
+areaStyle: {
+color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+offset: 0,
+color: 'rgba(87, 181, 231, 0.1)'
+}, {
+offset: 1,
+color: 'rgba(87, 181, 231, 0)'
+}])
+},
+itemStyle: {
+color: 'rgba(87, 181, 231, 1)'
+},
+lineStyle: {
+width: 2
+}
+}]
+});
+
+window.addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>
