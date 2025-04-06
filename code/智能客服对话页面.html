@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIreadsU - 智能客服</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#7C3AED',
+secondary: '#E5E7EB'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.chat-message {
+max-width: 85%;
+}
+.message-time {
+font-size: 12px;
+color: #9CA3AF;
+margin-top: 4px;
+}
+.chat-input {
+min-height: 44px;
+max-height: 120px;
+overflow-y: auto;
+}
+</style>
+</head>
+<body class="bg-gray-50">
+<header class="py-3 px-8 border-b bg-white sticky top-0 z-10">
+<div class="flex items-center gap-8 max-w-7xl mx-auto">
+<a href="https://readdy.ai/home/9ab9ccd9-04c6-4a10-942f-e58eb84ee22d/74dec174-cef8-4967-b3d0-31f18b2659de" data-readdy="true" class="text-2xl font-['Pacifico'] text-primary">AIreadsU</a>
+<div class="flex-1 relative">
+<input type="text" class="w-full h-12 pl-4 pr-12 text-sm border border-gray-200 !rounded-button focus:border-primary focus:outline-none" placeholder="搜索问题或对话记录...">
+<button class="absolute right-2 top-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-search-line"></i>
+</button>
+</div>
+<button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+<i class="ri-user-line text-gray-600"></i>
+</button>
+</div>
+</header>
+<main class="flex h-[calc(100vh-57px)]">
+<aside class="w-60 border-r bg-white overflow-y-auto">
+<div class="p-4">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-medium">对话历史</h3>
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-add-line"></i>
+</button>
+</div>
+<div class="space-y-3">
+<div class="p-3 bg-primary/5 !rounded-button cursor-pointer">
+<div class="font-medium text-primary mb-1">产品功能咨询</div>
+<div class="text-sm text-gray-500 truncate">关于AIreadsU的智能搜索功能...</div>
+<div class="text-xs text-gray-400 mt-1">2025-03-21 14:30</div>
+</div>
+<div class="p-3 hover:bg-gray-50 !rounded-button cursor-pointer">
+<div class="font-medium text-gray-700 mb-1">技术支持</div>
+<div class="text-sm text-gray-500 truncate">API接口调用问题咨询</div>
+<div class="text-xs text-gray-400 mt-1">2025-03-20 16:45</div>
+</div>
+<div class="p-3 hover:bg-gray-50 !rounded-button cursor-pointer">
+<div class="font-medium text-gray-700 mb-1">账户配置</div>
+<div class="text-sm text-gray-500 truncate">企业账户权限设置问题</div>
+<div class="text-xs text-gray-400 mt-1">2025-03-19 10:20</div>
+</div>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col bg-gray-50">
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<div class="flex justify-start">
+<div class="chat-message bg-white p-4 !rounded-button shadow-sm">
+<div class="flex items-center gap-2 mb-2">
+<i class="ri-robot-line text-primary"></i>
+<span class="font-medium">AI助手</span>
+</div>
+<p>您好！我是AIreadsU智能助手，很高兴为您服务。请问有什么可以帮您？</p>
+<div class="message-time">14:30</div>
+</div>
+</div>
+<div class="flex justify-end">
+<div class="chat-message bg-primary text-white p-4 !rounded-button shadow-sm">
+<p>我想了解一下AIreadsU的智能搜索功能具体有哪些特点？</p>
+<div class="message-time text-white/80">14:31</div>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="chat-message bg-white p-4 !rounded-button shadow-sm">
+<div class="flex items-center gap-2 mb-2">
+<i class="ri-robot-line text-primary"></i>
+<span class="font-medium">AI助手</span>
+</div>
+<div class="space-y-3">
+<p>AIreadsU的智能搜索功能主要有以下特点：</p>
+<ol class="list-decimal pl-4 space-y-2">
+<li>语义理解：能够理解用户的真实搜索意图</li>
+<li>多维度搜索：支持全文、标签、属性等多维度搜索</li>
+<li>智能推荐：基于用户行为和内容相关性进行智能推荐</li>
+<li>实时更新：搜索结果实时更新，保证信息时效性</li>
+</ol>
+<p>您想了解哪个方面的具体细节？</p>
+</div>
+<div class="message-time">14:32</div>
+</div>
+</div>
+</div>
+<div class="border-t bg-white p-4">
+<div class="flex items-end gap-3">
+<div class="flex-1 relative">
+<div contenteditable="true" class="chat-input w-full px-4 py-2 border border-gray-200 !rounded-button focus:outline-none focus:border-primary" placeholder="输入消息..."></div>
+<div class="absolute right-2 bottom-2 flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-emotion-line"></i>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-image-line"></i>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-primary bg-gray-50 !rounded-button">
+<i class="ri-mic-line"></i>
+</button>
+<button onclick="handleSend()" class="px-6 h-10 bg-primary text-white flex items-center gap-2 !rounded-button hover:bg-primary/90">
+发送
+</button>
+</div>
+</div>
+</div>
+</div>
+<aside class="w-72 border-l bg-white overflow-y-auto">
+<div class="p-4">
+<h3 class="font-medium mb-4">知识库推荐</h3>
+<div class="space-y-4">
+<div class="p-3 border border-gray-100 !rounded-button hover:border-primary/20 hover:bg-primary/5 cursor-pointer">
+<h4 class="font-medium mb-2">智能搜索使用指南</h4>
+<p class="text-sm text-gray-500 mb-2">详细介绍AIreadsU智能搜索的使用方法和最佳实践</p>
+<div class="flex items-center text-xs text-gray-400">
+<i class="ri-eye-line mr-1"></i>
+<span>2,341 阅读</span>
+</div>
+</div>
+<div class="p-3 border border-gray-100 !rounded-button hover:border-primary/20 hover:bg-primary/5 cursor-pointer">
+<h4 class="font-medium mb-2">API接口文档</h4>
+<p class="text-sm text-gray-500 mb-2">提供完整的API接口说明和调用示例</p>
+<div class="flex items-center text-xs text-gray-400">
+<i class="ri-eye-line mr-1"></i>
+<span>1,892 阅读</span>
+</div>
+</div>
+<div class="p-3 border border-gray-100 !rounded-button hover:border-primary/20 hover:bg-primary/5 cursor-pointer">
+<h4 class="font-medium mb-2">常见问题解答</h4>
+<p class="text-sm text-gray-500 mb-2">汇总用户常见问题和解决方案</p>
+<div class="flex items-center text-xs text-gray-400">
+<i class="ri-eye-line mr-1"></i>
+<span>3,567 阅读</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<script>
+const chatInput = document.querySelector('.chat-input');
+chatInput.addEventListener('keydown', function(e) {
+if (e.key === 'Enter' && !e.shiftKey) {
+e.preventDefault();
+handleSend();
+}
+});
+
+function handleSend() {
+const content = chatInput.textContent.trim();
+if (content) {
+sendMessage(content);
+chatInput.textContent = '';
+}
+}
+
+function sendMessage(content) {
+const messagesContainer = document.querySelector('.flex-1.overflow-y-auto');
+const messageHTML = `
+<div class="flex justify-end">
+<div class="chat-message bg-primary text-white p-4 !rounded-button shadow-sm">
+<p>${content}</p>
+<div class="message-time text-white/80">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+</div>
+</div>
+`;
+messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+setTimeout(() => {
+const aiResponse = `
+<div class="flex justify-start">
+<div class="chat-message bg-white p-4 !rounded-button shadow-sm">
+<div class="flex items-center gap-2 mb-2">
+<i class="ri-robot-line text-primary"></i>
+<span class="font-medium">AI助手</span>
+</div>
+<p>我已收到您的消息，正在为您处理...</p>
+<div class="message-time">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+</div>
+</div>
+`;
+messagesContainer.insertAdjacentHTML('beforeend', aiResponse);
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}, 500);
+}
+</script>
+</body>
+</html>
