@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>懂你的 AI 舆情引擎</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#8B5CF6',
+secondary: '#6D28D9'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.search-results {
+display: none;
+opacity: 0;
+transform: translateY(20px);
+}
+.show-results .search-home {
+display: none;
+}
+.show-results .search-results {
+display: block;
+}
+button:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+background-color: #e5e7eb !important;
+}
+#searchProgress {
+z-index: 50;
+transition: width 0.3s ease-in-out;
+}
+</style>
+</head>
+<body class="bg-white min-h-screen">
+<nav class="border-b">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-16">
+<div class="flex items-center">
+<span class="text-2xl font-['Pacifico'] text-primary">AIreadsU</span>
+</div>
+<div class="flex items-center space-x-8">
+<a href="#" class="text-gray-700 hover:text-primary">产品</a>
+<a href="#" class="text-gray-700 hover:text-primary">解决方案</a>
+<a href="#" class="text-gray-700 hover:text-primary">价格</a>
+<button class="bg-primary text-white px-6 py-2 !rounded-button hover:bg-secondary transition duration-200">登录</button>
+</div>
+</div>
+</div>
+</nav>
+<div class="search-home">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
+<h1 class="text-4xl font-bold mb-4">懂你的 AI 舆情引擎</h1>
+<p class="text-gray-600 mb-12">让企业知识管理更智能，让每个问题都能找到最优解答</p>
+<div class="relative">
+<div class="flex items-center border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-white">
+<input type="text" id="searchInput" class="flex-1 px-6 py-4 text-lg border-none focus:outline-none" placeholder="例如：宁波网信办如何做好宁波马拉松舆情工作？">
+<button class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-mic-line text-xl"></i>
+</button>
+<button id="searchBtn" onclick="handleSearch()" class="bg-primary text-white px-8 py-4 !rounded-button hover:bg-secondary transition duration-200 mx-2 flex items-center">
+<span id="searchBtnText">搜索</span>
+<i id="searchBtnLoading" class="ri-loader-4-line animate-spin ml-2 hidden"></i>
+</button>
+</div>
+</div>
+<div class="flex flex-wrap justify-center gap-4 mt-8">
+<span class="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">#企业知识库</span>
+<span class="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">#智能客服</span>
+<span class="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">#数据分析</span>
+<span class="px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">#业务流程</span>
+</div>
+</div>
+</div>
+<div class="search-results bg-gray-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="flex items-center mb-8 bg-white rounded-lg shadow-sm p-4">
+<input type="text" class="flex-1 border-none text-lg" value="宁波网信办如何做好宁波马拉松舆情工作？">
+<button class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-primary">
+<i class="ri-mic-line text-xl"></i>
+</button>
+<button class="bg-primary text-white px-6 py-2 !rounded-button hover:bg-secondary transition duration-200">
+搜索
+</button>
+</div>
+<div class="flex gap-8">
+<div class="w-1/3">
+<div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+<h3 class="text-lg font-semibold mb-4">同类舆情分析</h3>
+<div id="chartPlatform" class="h-64"></div>
+</div>
+<div class="bg-white rounded-lg shadow-sm p-6">
+<h3 class="text-lg font-semibold mb-4">历史分析报告</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4 cursor-pointer hover:text-primary transition-colors" onclick="showReport()">
+<i class="ri-file-list-line text-primary"></i>
+<span>2024年第一季度马拉松舆情分析</span>
+</div>
+<div class="flex items-center gap-4">
+<i class="ri-file-list-line text-primary"></i>
+<span>2023年度马拉松舆情总结</span>
+</div>
+<div class="flex items-center gap-4">
+<i class="ri-file-list-line text-primary"></i>
+<span>2023年第四季度舆情分析</span>
+</div>
+</div>
+<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+<div class="bg-white rounded-lg max-w-4xl mx-auto mt-20 max-h-[80vh] overflow-y-auto">
+<div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+<h2 class="text-xl font-bold">2024年第一季度马拉松舆情分析</h2>
+<button onclick="closeReport()" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line text-2xl"></i>
+</button>
+</div>
+<div class="p-6 space-y-8">
+<div>
+<h3 class="text-lg font-semibold mb-4">舆情概览</h3>
+<div class="grid grid-cols-4 gap-6">
+<div class="bg-primary/5 p-4 rounded-lg text-center">
+<div class="text-2xl font-bold text-primary">25,632</div>
+<div class="text-sm text-gray-600">总信息量</div>
+</div>
+<div class="bg-primary/5 p-4 rounded-lg text-center">
+<div class="text-2xl font-bold text-primary">89%</div>
+<div class="text-sm text-gray-600">正面情感</div>
+</div>
+<div class="bg-primary/5 p-4 rounded-lg text-center">
+<div class="text-2xl font-bold text-primary">8%</div>
+<div class="text-sm text-gray-600">中性情感</div>
+</div>
+<div class="bg-primary/5 p-4 rounded-lg text-center">
+<div class="text-2xl font-bold text-primary">3%</div>
+<div class="text-sm text-gray-600">负面情感</div>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-semibold mb-4">热点事件分析</h3>
+<div class="space-y-4">
+<div class="border rounded-lg p-4">
+<div class="flex justify-between items-center mb-2">
+<h4 class="font-semibold">赛事规模扩大</h4>
+<span class="text-green-500">正面</span>
+</div>
+<p class="text-gray-600">参赛人数较去年增长30%，赛事规模和影响力显著提升。媒体报道积极正面，市民反响热烈。</p>
+</div>
+<div class="border rounded-lg p-4">
+<div class="flex justify-between items-center mb-2">
+<h4 class="font-semibold">交通管制优化</h4>
+<span class="text-green-500">正面</span>
+</div>
+<p class="text-gray-600">通过科学规划和智能调度，今年交通管制影响降至最低，市民出行体验明显改善。</p>
+</div>
+<div class="border rounded-lg p-4">
+<div class="flex justify-between items-center mb-2">
+<h4 class="font-semibold">赛事安保工作</h4>
+<span class="text-yellow-500">中性</span>
+</div>
+<p class="text-gray-600">安保措施总体到位，个别区域存在人员疏散不及时情况，建议进一步完善应急预案。</p>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-semibold mb-4">平台分布</h3>
+<div id="reportChart" class="h-80"></div>
+</div>
+<div>
+<h3 class="text-lg font-semibold mb-4">建议措施</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">1</div>
+<div>
+<h4 class="font-semibold">持续优化赛事组织</h4>
+<p class="text-gray-600">进一步完善赛事服务体系，提升参赛体验和观赛体验。</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">2</div>
+<div>
+<h4 class="font-semibold">加强舆情引导</h4>
+<p class="text-gray-600">重点关注负面舆情，及时回应市民关切，做好正面宣传引导。</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">3</div>
+<div>
+<h4 class="font-semibold">完善应急预案</h4>
+<p class="text-gray-600">针对突发情况制定更详细的应对措施，确保赛事安全有序进行。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-2/3">
+<div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+<div class="prose max-w-none">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold">舆情分析结果</h2>
+<button onclick="showRelationshipAnalysis()" class="flex items-center gap-2 text-primary hover:text-secondary transition-colors">
+<i class="ri-mind-map-line"></i>
+<span>关系链分析</span>
+</button>
+</div>
+<p class="text-gray-600 mb-6">首先从往年舆情分析来看：</p>
+<div class="bg-gray-50 p-6 rounded-lg mb-6">
+<div class="grid grid-cols-4 gap-4">
+<div class="text-center">
+<div class="text-2xl font-bold text-primary">10,000</div>
+<div class="text-sm text-gray-600">总量</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-bold text-primary">5,000</div>
+<div class="text-sm text-gray-600">短视频</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-bold text-primary">2,000</div>
+<div class="text-sm text-gray-600">小红书</div>
+</div>
+<div class="text-center">
+<div class="text-2xl font-bold text-primary">1,900</div>
+<div class="text-sm text-gray-600">其他平台</div>
+</div>
+</div>
+</div>
+<h3 class="text-lg font-semibold mb-4">网民反映问题主要集中在：</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">1</div>
+<div>
+<h4 class="font-semibold">交通拥堵，出行不便</h4>
+<p class="text-gray-600">主要集中在赛事期间的交通管制和道路拥堵问题</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">2</div>
+<div>
+<h4 class="font-semibold">参赛运动员保障工作不充分</h4>
+<p class="text-gray-600">包括补给站设置、医疗保障等方面的问题</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">3</div>
+<div>
+<h4 class="font-semibold">部分网民提出反对</h4>
+<p class="text-gray-600">认为赛事劳民伤财，影响市民正常生活</p>
+</div>
+</div>
+</div>
+<div class="mt-8 p-6 bg-primary/5 rounded-lg">
+<h3 class="text-lg font-semibold mb-4">结论建议</h3>
+<p>重点在短视频、小红书平台加强监测，重点关注以上三个问题的巡查。建议：</p>
+<ul class="list-disc list-inside space-y-2 mt-4">
+<li>加强交通管制信息的提前发布和引导</li>
+<li>完善赛事保障措施，增加补给站点</li>
+<li>做好舆论引导，突出赛事积极影响</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+function updateSearchButtonState() {
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+searchBtn.disabled = !searchInput.value.trim();
+}
+function showLoading() {
+const btn = document.getElementById('searchBtn');
+const btnText = document.getElementById('searchBtnText');
+const btnLoading = document.getElementById('searchBtnLoading');
+btn.disabled = true;
+btnText.textContent = '搜索中...';
+btnLoading.classList.remove('hidden');
+// 添加进度提示
+const progressBar = document.createElement('div');
+progressBar.id = 'searchProgress';
+progressBar.className = 'fixed top-0 left-0 h-1 bg-primary transition-all duration-500';
+document.body.appendChild(progressBar);
+// 模拟进度
+let width = 0;
+const interval = setInterval(() => {
+width += 5;
+if (width <= 90) {
+progressBar.style.width = `${width}%`;
+}
+}, 100);
+return interval;
+}
+function hideLoading(interval) {
+const btn = document.getElementById('searchBtn');
+const btnText = document.getElementById('searchBtnText');
+const btnLoading = document.getElementById('searchBtnLoading');
+const progressBar = document.getElementById('searchProgress');
+// 完成进度条
+clearInterval(interval);
+progressBar.style.width = '100%';
+setTimeout(() => {
+btn.disabled = false;
+btnText.textContent = '搜索';
+btnLoading.classList.add('hidden');
+progressBar.remove();
+}, 500);
+}
+function handleSearch() {
+const searchInput = document.getElementById('searchInput');
+if (!searchInput.value.trim()) {
+const toast = document.createElement('div');
+toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 translate-x-full';
+toast.textContent = '请输入搜索内容';
+document.body.appendChild(toast);
+setTimeout(() => {
+toast.classList.remove('translate-x-full');
+}, 100);
+setTimeout(() => {
+toast.classList.add('translate-x-full');
+setTimeout(() => toast.remove(), 500);
+}, 3000);
+return;
+}
+const loadingInterval = showLoading();
+setTimeout(() => {
+document.body.classList.add('show-results');
+document.querySelector('.search-results').style.opacity = '0';
+document.querySelector('.search-results').style.transform = 'translateY(20px)';
+requestAnimationFrame(() => {
+document.querySelector('.search-results').style.transition = 'all 0.5s ease';
+document.querySelector('.search-results').style.opacity = '1';
+document.querySelector('.search-results').style.transform = 'translateY(0)';
+// 平滑滚动到结果区域
+document.querySelector('.search-results').scrollIntoView({
+behavior: 'smooth',
+block: 'start'
+});
+});
+initCharts();
+hideLoading(loadingInterval);
+}, 1500);
+}
+// 监听输入框变化
+document.getElementById('searchInput').addEventListener('input', updateSearchButtonState);
+// 初始化按钮状态
+document.addEventListener('DOMContentLoaded', updateSearchButtonState);
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Enter') {
+const searchInput = document.getElementById('searchInput');
+if (document.activeElement === searchInput) {
+handleSearch();
+}
+}
+});
+function initCharts() {
+const chartPlatform = echarts.init(document.getElementById('chartPlatform'));
+const reportChart = document.getElementById('reportChart') ? echarts.init(document.getElementById('reportChart')) : null;
+if (reportChart) {
+const reportOption = {
+animation: false,
+tooltip: {
+trigger: 'axis',
+axisPointer: {
+type: 'shadow'
+},
+backgroundColor: 'rgba(255, 255, 255, 0.9)',
+borderColor: '#eee',
+borderWidth: 1,
+padding: 10,
+textStyle: {
+color: '#333'
+}
+},
+grid: {
+left: '3%',
+right: '4%',
+bottom: '3%',
+containLabel: true
+},
+xAxis: {
+type: 'category',
+data: ['微博', '抖音', '小红书', '微信', '知乎', '其他'],
+axisLine: {
+lineStyle: {
+color: '#ddd'
+}
+}
+},
+yAxis: {
+type: 'value',
+axisLine: {
+show: false
+},
+axisTick: {
+show: false
+},
+splitLine: {
+lineStyle: {
+color: '#eee'
+}
+}
+},
+series: [
+{
+name: '信息量',
+type: 'bar',
+barWidth: '60%',
+data: [8500, 6200, 4800, 3200, 1800, 1132],
+itemStyle: {
+color: 'rgba(87, 181, 231, 1)',
+borderRadius: [8, 8, 0, 0]
+}
+}
+]
+};
+reportChart.setOption(reportOption);
+}
+const platformDetails = {
+'短视频': {
+hotTopics: ['#宁波马拉松精彩瞬间#', '#马拉松赛道风景#', '#运动员加油#'],
+sentiment: { positive: 75, neutral: 15, negative: 10 },
+engagements: { likes: 150000, comments: 25000, shares: 35000 }
+},
+'微博': {
+hotTopics: ['#宁波马拉松交通管制#', '#马拉松选手故事#', '#赛事直播#'],
+sentiment: { positive: 65, neutral: 20, negative: 15 },
+engagements: { likes: 50000, comments: 15000, shares: 10000 }
+},
+'小红书': {
+hotTopics: ['宁波马拉松打卡攻略', '赛事周边美食推荐', '参赛装备分享'],
+sentiment: { positive: 85, neutral: 10, negative: 5 },
+engagements: { likes: 80000, comments: 12000, shares: 18000 }
+},
+'论坛': {
+hotTopics: ['马拉松赛事讨论', '交通管制信息', '志愿者招募'],
+sentiment: { positive: 70, neutral: 20, negative: 10 },
+engagements: { likes: 20000, comments: 8000, shares: 5000 }
+}
+};
+const option = {
+animation: false,
+tooltip: {
+trigger: 'item',
+formatter: (params) => {
+const total = option.series[0].data.reduce((sum, item) => sum + item.value, 0);
+const percentage = ((params.value / total) * 100).toFixed(1);
+return `${params.name}<br/>数量：${params.value}<br/>占比：${percentage}%`;
+},
+backgroundColor: 'rgba(255, 255, 255, 0.9)',
+borderColor: '#eee',
+borderWidth: 1,
+padding: 10,
+textStyle: {
+color: '#333'
+}
+},
+legend: {
+bottom: '0%',
+left: 'center'
+},
+series: [
+{
+name: '平台分布',
+type: 'pie',
+radius: ['40%', '70%'],
+avoidLabelOverlap: false,
+itemStyle: {
+borderRadius: 10,
+borderColor: '#fff',
+borderWidth: 2
+},
+label: {
+show: false,
+position: 'center'
+},
+emphasis: {
+label: {
+show: true,
+fontSize: '20',
+fontWeight: 'bold'
+},
+scale: true,
+scaleSize: 10
+},
+labelLine: {
+show: false
+},
+data: [
+{ value: 5000, name: '短视频', itemStyle: { color: 'rgba(87, 181, 231, 1)' } },
+{ value: 1000, name: '微博', itemStyle: { color: 'rgba(141, 211, 199, 1)' } },
+{ value: 2000, name: '小红书', itemStyle: { color: 'rgba(251, 191, 114, 1)' } },
+{ value: 900, name: '论坛', itemStyle: { color: 'rgba(252, 141, 98, 1)' } }
+]
+}
+]
+};
+chartPlatform.setOption(option);
+// 点击事件处理
+chartPlatform.on('click', function(params) {
+const platform = params.name;
+const details = platformDetails[platform];
+// 创建并显示详情弹窗
+const modal = document.createElement('div');
+modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+modal.innerHTML = `
+<div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 relative">
+<button class="absolute right-4 top-4 text-gray-500 hover:text-gray-700" onclick="this.parentElement.parentElement.remove()">
+<i class="ri-close-line text-xl"></i>
+</button>
+<h3 class="text-xl font-bold mb-4">${platform}平台舆情详情</h3>
+<div class="space-y-6">
+<div>
+<h4 class="font-semibold mb-2">热门话题</h4>
+<div class="flex flex-wrap gap-2">
+${details.hotTopics.map(topic =>
+`<span class="px-3 py-1 bg-gray-100 rounded-full text-sm">${topic}</span>`
+).join('')}
+</div>
+</div>
+<div>
+<h4 class="font-semibold mb-2">情感分布</h4>
+<div class="flex items-center gap-4">
+<div class="flex-1 bg-gray-200 rounded-full h-2">
+<div class="bg-green-500 h-2 rounded-full" style="width: ${details.sentiment.positive}%"></div>
+</div>
+<span class="text-sm">正面 ${details.sentiment.positive}%</span>
+</div>
+<div class="flex items-center gap-4 mt-2">
+<div class="flex-1 bg-gray-200 rounded-full h-2">
+<div class="bg-gray-500 h-2 rounded-full" style="width: ${details.sentiment.neutral}%"></div>
+</div>
+<span class="text-sm">中性 ${details.sentiment.neutral}%</span>
+</div>
+<div class="flex items-center gap-4 mt-2">
+<div class="flex-1 bg-gray-200 rounded-full h-2">
+<div class="bg-red-500 h-2 rounded-full" style="width: ${details.sentiment.negative}%"></div>
+</div>
+<span class="text-sm">负面 ${details.sentiment.negative}%</span>
+</div>
+</div>
+<div>
+<h4 class="font-semibold mb-2">互动数据</h4>
+<div class="grid grid-cols-3 gap-4">
+<div class="text-center">
+<div class="text-xl font-bold text-primary">${(details.engagements.likes/10000).toFixed(1)}w</div>
+<div class="text-sm text-gray-600">点赞</div>
+</div>
+<div class="text-center">
+<div class="text-xl font-bold text-primary">${(details.engagements.comments/10000).toFixed(1)}w</div>
+<div class="text-sm text-gray-600">评论</div>
+</div>
+<div class="text-center">
+<div class="text-xl font-bold text-primary">${(details.engagements.shares/10000).toFixed(1)}w</div>
+<div class="text-sm text-gray-600">分享</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+`;
+document.body.appendChild(modal);
+});
+// 窗口大小改变时自动调整图表大小
+window.addEventListener('resize', function() {
+chartPlatform.resize();
+});
+}
+function showReport() {
+document.getElementById('reportModal').classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+initCharts();
+}
+function closeReport() {
+document.getElementById('reportModal').classList.add('hidden');
+document.body.style.overflow = '';
+}
+
+function showRelationshipAnalysis() {
+const modal = document.createElement('div');
+modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+modal.innerHTML = `
+<div class="bg-white rounded-lg w-[80vw] h-[80vh] mx-4 relative flex flex-col">
+<div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+<h2 class="text-xl font-bold">关系链分析</h2>
+<button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line text-2xl"></i>
+</button>
+</div>
+<div class="flex-1 p-6 overflow-auto">
+<div class="grid grid-cols-2 gap-6 h-full">
+<div class="bg-gray-50 rounded-lg p-4">
+<h3 class="text-lg font-semibold mb-4">关键人物关系网络</h3>
+<div id="relationshipChart" class="w-full h-[calc(100%-2rem)]"></div>
+</div>
+<div class="space-y-6">
+<div class="bg-gray-50 rounded-lg p-4">
+<h3 class="text-lg font-semibold mb-4">核心人物分析</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4 p-3 bg-white rounded-lg">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+<i class="ri-user-star-line text-xl text-primary"></i>
+</div>
+<div class="flex-1">
+<div class="font-semibold">张明</div>
+<div class="text-sm text-gray-600">宁波马拉松组委会主席</div>
+</div>
+<div class="text-sm text-primary">影响力指数：95</div>
+</div>
+<div class="flex items-center gap-4 p-3 bg-white rounded-lg">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+<i class="ri-user-star-line text-xl text-primary"></i>
+</div>
+<div class="flex-1">
+<div class="font-semibold">李华</div>
+<div class="text-sm text-gray-600">网信办主任</div>
+</div>
+<div class="text-sm text-primary">影响力指数：88</div>
+</div>
+<div class="flex items-center gap-4 p-3 bg-white rounded-lg">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+<i class="ri-user-star-line text-xl text-primary"></i>
+</div>
+<div class="flex-1">
+<div class="font-semibold">王强</div>
+<div class="text-sm text-gray-600">体育局副局长</div>
+</div>
+<div class="text-sm text-primary">影响力指数：82</div>
+</div>
+</div>
+</div>
+<div class="bg-gray-50 rounded-lg p-4">
+<h3 class="text-lg font-semibold mb-4">关系链传播路径</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="text-sm">组委会 → 媒体 → 公众</div>
+<div class="ml-auto text-sm text-gray-600">传播效率：85%</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="text-sm">网信办 → 各平台 → KOL → 粉丝</div>
+<div class="ml-auto text-sm text-gray-600">传播效率：78%</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="text-sm">体育局 → 运动员 → 社交媒体</div>
+<div class="ml-auto text-sm text-gray-600">传播效率：72%</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+`;
+document.body.appendChild(modal);
+document.body.style.overflow = 'hidden';
+
+// 初始化关系图表
+const relationshipChart = echarts.init(document.getElementById('relationshipChart'));
+const option = {
+  animation: false,
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: '#eee',
+    borderWidth: 1,
+    padding: 10,
+    textStyle: {
+      color: '#333'
+    }
+  },
+  legend: {
+    top: '2%',
+    left: 'center'
+  },
+  series: [{
+    name: '关系网络',
+    type: 'graph',
+    layout: 'force',
+    data: [{
+      name: '组委会',
+      value: 95,
+      symbolSize: 60,
+      category: 0,
+      itemStyle: { color: 'rgba(87, 181, 231, 1)' }
+    }, {
+      name: '网信办',
+      value: 88,
+      symbolSize: 50,
+      category: 0,
+      itemStyle: { color: 'rgba(141, 211, 199, 1)' }
+    }, {
+      name: '体育局',
+      value: 82,
+      symbolSize: 45,
+      category: 0,
+      itemStyle: { color: 'rgba(251, 191, 114, 1)' }
+    }, {
+      name: '媒体',
+      value: 70,
+      symbolSize: 40,
+      category: 1
+    }, {
+      name: 'KOL',
+      value: 65,
+      symbolSize: 35,
+      category: 1
+    }, {
+      name: '运动员',
+      value: 60,
+      symbolSize: 30,
+      category: 1
+    }, {
+      name: '公众',
+      value: 50,
+      symbolSize: 25,
+      category: 2
+    }],
+    links: [{
+      source: '组委会',
+      target: '媒体'
+    }, {
+      source: '媒体',
+      target: '公众'
+    }, {
+      source: '网信办',
+      target: 'KOL'
+    }, {
+      source: 'KOL',
+      target: '公众'
+    }, {
+      source: '体育局',
+      target: '运动员'
+    }, {
+      source: '运动员',
+      target: '公众'
+    }],
+    categories: [{
+      name: '核心机构'
+    }, {
+      name: '传播媒介'
+    }, {
+      name: '受众群体'
+    }],
+    roam: true,
+    label: {
+      show: true,
+      position: 'right',
+      formatter: '{b}'
+    },
+    force: {
+      repulsion: 1000,
+      edgeLength: 120
+    }
+  }]
+};
+relationshipChart.setOption(option);
+
+// 监听窗口大小变化
+window.addEventListener('resize', () => {
+  relationshipChart.resize();
+});
+}
+// 点击模态框外部关闭
+document.getElementById('reportModal')?.addEventListener('click', (e) => {
+if (e.target === document.getElementById('reportModal')) {
+closeReport();
+}
+});
+</script>
+</body>
+</html>
