@@ -64,7 +64,7 @@ TuGraph支持实时数据的更新和分析，确保企业AI搜索大脑能够�
 ![image](https://github.com/user-attachments/assets/1d23569f-f2d6-4b63-bbba-670fd0c11e8e)
 
 
- 2. 可信企业AI搜索与推荐
+ 2. 事实驱动AI搜索引擎
 ![搜索结果1](https://github.com/user-attachments/assets/2f101052-7c26-4587-839b-ea03704f75b8)
 
 
