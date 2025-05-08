@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIreadsU - 事实驱动的企业AI搜索</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#818CF8'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.search-results-container {
+height: calc(100vh - 64px);
+}
+.relationship-node {
+transition: all 0.3s ease;
+}
+.relationship-node:hover {
+transform: scale(1.05);
+}
+.search-result-card {
+transition: all 0.3s ease;
+}
+.search-result-card:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.relationship-graph {
+position: relative;
+}
+.relationship-graph canvas {
+width: 100%;
+height: 100%;
+}
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+-webkit-appearance: none;
+}
+.tag-container {
+overflow-x: auto;
+scrollbar-width: none;
+}
+.tag-container::-webkit-scrollbar {
+display: none;
+}
+/* 添加动画效果 */
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+@keyframes fadeOut {
+from { opacity: 1; }
+to { opacity: 0; }
+}
+@keyframes slideIn {
+from { transform: translateY(20px); opacity: 0; }
+to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideOut {
+from { transform: translateY(0); opacity: 1; }
+to { transform: translateY(20px); opacity: 0; }
+}
+.animate-fade-in {
+animation: fadeIn 0.2s ease-in-out forwards;
+}
+.animate-fade-out {
+animation: fadeOut 0.2s ease-in-out forwards;
+}
+.animate-slide-in {
+animation: slideIn 0.3s ease-out forwards;
+}
+.animate-slide-out {
+animation: slideOut 0.3s ease-in forwards;
+}
+</style>
+</head>
+<body class="bg-white min-h-screen">
+<!-- 首页 -->
+<div id="home-page" class="min-h-screen flex flex-col">
+<!-- 导航栏 -->
+<nav class="flex items-center justify-between px-8 py-4 border-b border-gray-100">
+<div class="flex items-center">
+<h1 class="text-3xl font-['Pacifico'] text-primary">AIreadsU</h1>
+</div>
+<div class="flex items-center space-x-8">
+<a href="#" class="text-gray-600 hover:text-primary">产品</a>
+<a href="#" class="text-gray-600 hover:text-primary">解决方案</a>
+<a href="#" class="text-gray-600 hover:text-primary">价格</a>
+<a href="https://readdy.ai/home/69d01409-17bf-4a29-8708-5dc87d5e34e1/1f2c090b-0fd0-4fbf-b5b1-08b9a488d102" data-readdy="true">
+  <button class="bg-primary text-white px-6 py-2 rounded-button whitespace-nowrap">登录</button>
+</a>
+</div>
+</nav>
+<!-- 主要内容区 -->
+<div class="flex-1 flex flex-col items-center justify-center px-4 py-16">
+<div class="text-center max-w-4xl mb-12">
+<h2 class="text-5xl font-bold text-gray-900 mb-6">AI懂你，事实驱动的企业AI搜索</h2>
+<p class="text-xl text-gray-600 mb-8">让企业知识管理更智能，让每个问题都能找到最优解答</p>
+</div>
+<div class="w-full max-w-3xl mb-12">
+<div class="relative">
+<input
+type="search"
+id="search-input"
+class="w-full h-16 px-6 py-4 text-lg border border-gray-200 rounded-full focus:outline-none focus:border-primary shadow-sm"
+placeholder="AI基于社交关系即搜索权限，提供答案..."
+>
+<div class="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center">
+<button class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary">
+<i class="ri-mic-line ri-lg"></i>
+</button>
+<button
+id="search-button"
+class="bg-primary text-white px-8 py-3 rounded-full flex items-center justify-center whitespace-nowrap ml-2"
+onclick="showSearchResults()"
+>
+<i class="ri-search-line mr-2"></i>
+搜索
+</button>
+</div>
+</div>
+<div class="flex justify-center mt-6 pb-2">
+<div class="flex flex-wrap justify-center gap-2">
+<span class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200"># 企业知识库</span>
+<span class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200"># 智能客服</span>
+<span class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200"># 数据分析</span>
+<span class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200"># 业务流程</span>
+</div>
+</div>
+</div>
+</div>
+<footer class="text-center text-gray-500 text-sm py-6">
+<div class="flex justify-center space-x-4">
+<a href="#" class="hover:text-primary">关于我们</a>
+<span>|</span>
+<a href="#" class="hover:text-primary">使用条款</a>
+<span>|</span>
+<a href="#" class="hover:text-primary">隐私政策</a>
+<span>|</span>
+<a href="#" class="hover:text-primary">帮助中心</a>
+</div>
+<div class="mt-2">© 2025 AIreadsU. 保留所有权利 | 京ICP备XXXXXXXX号</div>
+</footer>
+</div>
+<!-- 搜索结果页 -->
+<div id="search-results-page" class="hidden">
+<!-- 顶部导航栏 -->
+<nav class="h-16 border-b border-gray-200 flex items-center justify-between px-4 bg-white">
+<div class="flex items-center">
+<h1 class="text-2xl font-['Pacifico'] text-primary cursor-pointer" onclick="showHomePage()">AIreadsU</h1>
+</div>
+<div class="relative w-1/3">
+<input
+type="search"
+class="w-full h-10 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-primary"
+placeholder="输入新的问题..."
+value="企业数字化转型的最佳实践是什么？"
+>
+<button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary">
+<i class="ri-search-line"></i>
+</button>
+</div>
+<div class="flex items-center space-x-4">
+<button class="text-gray-600 hover:text-primary w-8 h-8 flex items-center justify-center">
+<i class="ri-settings-3-line ri-lg"></i>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
+<span class="text-sm">ZL</span>
+</div>
+</div>
+</nav>
+<div class="search-results-container flex">
+<!-- 左侧关系链 -->
+<div class="w-1/5 border-r border-gray-200 overflow-y-auto p-4">
+<h2 class="text-lg font-medium mb-4">社交关系链</h2>
+<div class="space-y-4">
+<!-- 关系链节点 1 -->
+<div class="relationship-node bg-blue-50 p-3 rounded-lg border-l-4 border-primary">
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=100&height=100&seq=1&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="张伟">
+</div>
+<div class="ml-3">
+<p class="font-medium">张伟</p>
+<p class="text-xs text-gray-500">数字化转型顾问</p>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<div class="relative">
+<button class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-primary">
+<i class="ri-message-3-line"></i>
+<span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">3</span>
+</button>
+</div>
+<button id="follow-btn" class="text-primary border border-primary px-2 py-1 rounded-button text-xs whitespace-nowrap hover:bg-primary hover:text-white transition-colors">
+<span class="follow-text">关注</span>
+<span class="following-text hidden">已关注</span>
+</button>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同好友: 林小明, 王芳</p>
+<p>互动: 12次会议, 5个项目</p>
+</div>
+</div>
+<!-- 关系链节点 2 -->
+<div class="relationship-node p-3 rounded-lg hover:bg-gray-50" id="lina-node">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=100&height=100&seq=2&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="李娜">
+</div>
+<div class="ml-3">
+<p class="font-medium">李娜</p>
+<p class="text-xs text-gray-500">IT战略总监</p>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同好友: 张伟, 陈晓</p>
+<p>互动: 8次会议, 3个项目</p>
+</div>
+</div>
+<!-- 关系链节点 3 -->
+<div class="relationship-node p-3 rounded-lg hover:bg-gray-50">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20man%20in%20casual%20business%20attire%2C%20tech%20company%20executive%2C%20neutral%20background%2C%20high%20quality%20portrait&width=100&height=100&seq=3&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="王鹏">
+</div>
+<div class="ml-3">
+<p class="font-medium">王鹏</p>
+<p class="text-xs text-gray-500">技术创新负责人</p>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同好友: 刘强, 张伟</p>
+<p>互动: 5次会议, 2个项目</p>
+</div>
+</div>
+<!-- 关系链节点 4 -->
+<div class="relationship-node p-3 rounded-lg hover:bg-gray-50">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20middle-aged%20chinese%20woman%2C%20corporate%20executive%2C%20business%20casual%20attire%2C%20neutral%20background%2C%20high%20quality%20portrait&width=100&height=100&seq=4&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="陈晓">
+</div>
+<div class="ml-3">
+<p class="font-medium">陈晓</p>
+<p class="text-xs text-gray-500">变革管理专家</p>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同好友: 李娜, 林小明</p>
+<p>互动: 7次会议, 4个项目</p>
+</div>
+</div>
+<!-- 关系链节点 5 -->
+<div class="relationship-node p-3 rounded-lg hover:bg-gray-50">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=young%20chinese%20professional%20man%2C%20tech%20industry%2C%20smart%20casual%20attire%2C%20neutral%20background%2C%20high%20quality%20portrait&width=100&height=100&seq=5&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="林小明">
+</div>
+<div class="ml-3">
+<p class="font-medium">林小明</p>
+<p class="text-xs text-gray-500">数据分析主管</p>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同好友: 张伟, 陈晓</p>
+<p>互动: 9次会议, 3个项目</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 中间搜索结果 -->
+<div class="w-3/5 overflow-y-auto p-6">
+<div class="mb-6">
+<h2 class="text-xl font-medium mb-2">基于您的社交关系网络，我们找到了以下结果</h2>
+</div>
+<div class="space-y-6">
+<!-- 搜索结果卡片 1 -->
+<div class="search-result-card bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=100&height=100&seq=1&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="张伟">
+</div>
+<div class="ml-3">
+<p class="font-medium">张伟</p>
+<p class="text-xs text-gray-500">数字化转型顾问 | 1级关系</p>
+</div>
+</div>
+<div class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+可信度: 92%
+</div>
+</div>
+<!-- 关系链展示 -->
+<div class="bg-blue-50 rounded-lg p-3 mb-4">
+<h3 class="text-sm font-medium mb-2 flex items-center">
+<i class="ri-link-m-line mr-1"></i>
+您与张伟的关系链
+</h3>
+<div class="flex items-center justify-between">
+<div class="flex-1">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">您</div>
+<div class="h-0.5 w-12 bg-primary mx-1"></div>
+<div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-6 h-6 rounded-full object-cover" alt="张伟">
+</div>
+</div>
+</div>
+<div class="text-xs text-gray-600">
+<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">直接联系</span>
+<span class="ml-2">互动频率: 高</span>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同参与项目: 企业智能决策系统升级、数据分析平台建设</p>
+<p>最近互动: 2025-04-05 项目评审会议</p>
+</div>
+</div>
+<div class="text-gray-700">
+<p class="mb-3">企业数字化转型的最佳实践包括以下几个关键方面：</p>
+<ol class="list-decimal pl-5 space-y-2">
+<li><strong>明确战略目标</strong>：数字化转型必须与企业整体战略保持一致，明确转型将如何创造价值。</li>
+<li><strong>建立数据驱动文化</strong>：培养全公司范围内的数据素养，让决策基于数据而非直觉。</li>
+<li><strong>分阶段实施</strong>：从小规模试点项目开始，验证价值后再扩大规模，避免一次性大规模变革带来的风险。</li>
+<li><strong>重视人才培养</strong>：投资于员工的数字技能培训，同时引入具备数字思维的新人才。</li>
+<li><strong>构建敏捷组织</strong>：打破传统部门壁垒，建立跨职能团队，提高组织响应速度。</li>
+</ol>
+<p class="mt-3">我在协助多家企业进行数字化转型的过程中发现，成功的转型不仅仅是技术的更新，更是思维方式和组织文化的转变。</p>
+</div>
+<div class="mt-4 text-sm text-gray-500">
+<p>来源：《2025年企业数字化转型白皮书》，张伟，2025年3月15日</p>
+</div>
+<!-- 咨询对话按钮 -->
+<div class="mt-4 flex justify-end space-x-2">
+<button id="toggle-consultation-btn" class="border border-gray-300 text-gray-600 px-4 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-gray-100 transition-colors">
+<i class="ri-arrow-down-s-line mr-2" id="toggle-icon"></i>
+折叠
+</button>
+<button id="ask-more-btn" class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-opacity-90 transition-colors">
+<i class="ri-question-answer-line mr-2"></i>
+进一步咨询
+</button>
+</div>
+<!-- 折叠的咨询内容 -->
+<div id="consultation-preview" class="mt-3 bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+<div class="space-y-3">
+<div class="flex justify-end">
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md">
+<p>关于数字化转型，我想了解一下如何评估企业的数字化转型成熟度？有什么具体的指标或框架吗？</p>
+<p class="text-xs text-white opacity-70 mt-1">2025-04-11 10:15</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="张伟">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+<p>评估企业数字化转型成熟度可以使用多维度框架，主要包括：</p>
+<ol class="list-decimal pl-5 mt-2 space-y-1">
+<li>战略维度：数字战略与业务战略的一致性</li>
+<li>技术维度：IT基础设施现代化程度、数据集成水平</li>
+<li>组织维度：跨部门协作能力、敏捷工作方式采用程度</li>
+<li>人才维度：数字技能覆盖率、数字领导力</li>
+<li>客户维度：数字化客户体验、全渠道整合程度</li>
+</ol>
+<p class="mt-2">我建议使用数字成熟度评估工具(DMAT)进行自评，可以帮助识别差距和优先发展领域。</p>
+<p class="text-xs text-gray-500 mt-1">2025-04-11 10:18</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 咨询对话框 -->
+<div id="consultation-dialog" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+<h3 class="text-lg font-medium">与张伟的对话</h3>
+<button id="close-consultation" class="text-gray-500 hover:text-gray-700 w-8 h-8 flex items-center justify-center">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="p-6 h-96 overflow-y-auto space-y-4" id="consultation-messages">
+<!-- 对话内容 -->
+<div class="flex justify-end">
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md">
+<p>关于数字化转型，我想了解一下如何评估企业的数字化转型成熟度？有什么具体的指标或框架吗？</p>
+<p class="text-xs text-white opacity-70 mt-1">2025-04-11 10:15</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="张伟">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+<p>评估企业数字化转型成熟度可以使用多维度框架，主要包括：</p>
+<ol class="list-decimal pl-5 mt-2 space-y-1">
+<li>战略维度：数字战略与业务战略的一致性</li>
+<li>技术维度：IT基础设施现代化程度、数据集成水平</li>
+<li>组织维度：跨部门协作能力、敏捷工作方式采用程度</li>
+<li>人才维度：数字技能覆盖率、数字领导力</li>
+<li>客户维度：数字化客户体验、全渠道整合程度</li>
+</ol>
+<p class="mt-2">我建议使用数字成熟度评估工具(DMAT)进行自评，可以帮助识别差距和优先发展领域。</p>
+<p class="text-xs text-gray-500 mt-1">2025-04-11 10:18</p>
+</div>
+</div>
+</div>
+<div class="flex justify-end">
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md">
+<p>这个框架很全面，谢谢！对于中小企业来说，数字化转型的首要步骤应该是什么？资源有限的情况下，应该优先关注哪些方面？</p>
+<p class="text-xs text-white opacity-70 mt-1">2025-04-11 10:22</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="张伟">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+<p>对于资源有限的中小企业，我建议采取以下步骤：</p>
+<ol class="list-decimal pl-5 mt-2 space-y-1">
+<li><strong>明确业务痛点</strong>：首先识别最影响业务增长的1-2个关键痛点</li>
+<li><strong>选择高ROI项目</strong>：优先实施能快速产生价值的项目，如客户关系管理系统或电子商务平台</li>
+<li><strong>利用SaaS解决方案</strong>：采用现成的云服务，避免大量前期投资</li>
+<li><strong>培养核心数字人才</strong>：至少培养1-2名数字化转型领导者</li>
+<li><strong>建立数据收集机制</strong>：开始有意识地收集和利用业务数据</li>
+</ol>
+<p class="mt-2">记住，对中小企业而言，"小而精"的策略比全面转型更实际。可以从客户体验数字化入手，通常能带来最直接的业务价值。</p>
+<p class="text-xs text-gray-500 mt-1">2025-04-11 10:25</p>
+</div>
+</div>
+</div>
+</div>
+<div class="border-t border-gray-200 px-6 py-4">
+<div class="flex items-center">
+<input type="text" id="consultation-input" class="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-primary" placeholder="输入您的问题...">
+<button id="send-consultation" class="ml-2 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-90 transition-colors">
+<i class="ri-send-plane-fill"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 搜索结果卡片 2 -->
+<div class="search-result-card bg-white border border-gray-200 rounded-lg p-5 shadow-sm" id="lina-result">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=100&height=100&seq=2&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="李娜">
+</div>
+<div class="ml-3">
+<p class="font-medium">李娜</p>
+<p class="text-xs text-gray-500">IT战略总监 | 2级关系</p>
+</div>
+</div>
+<div class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+可信度: 87%
+</div>
+</div>
+<!-- 关系链展示 -->
+<div class="bg-green-50 rounded-lg p-3 mb-4">
+<h3 class="text-sm font-medium mb-2 flex items-center">
+<i class="ri-link-m-line mr-1"></i>
+您与李娜的关系链
+</h3>
+<div class="flex items-center justify-between">
+<div class="flex-1">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs">您</div>
+<div class="h-0.5 w-8 bg-primary mx-1"></div>
+<div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-6 h-6 rounded-full object-cover" alt="张伟">
+</div>
+<div class="h-0.5 w-8 bg-primary mx-1"></div>
+<div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=40&height=40&seq=2&orientation=squarish" class="w-6 h-6 rounded-full object-cover" alt="李娜">
+</div>
+</div>
+</div>
+<div class="text-xs text-gray-600">
+<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">2级关系</span>
+<span class="ml-2">互动频率: 中</span>
+</div>
+</div>
+<div class="mt-2 text-xs text-gray-600">
+<p>共同参与项目: 企业数据分析平台建设、IT基础设施现代化</p>
+<p>最近互动: 2025-03-18 技术研讨会</p>
+</div>
+</div>
+<div class="text-gray-700">
+<p class="mb-3">从技术实施角度，我认为企业数字化转型的最佳实践包括：</p>
+<ul class="list-disc pl-5 space-y-2">
+<li><strong>技术栈现代化</strong>：评估并更新过时的技术基础设施，采用云服务、微服务架构等现代技术。</li>
+<li><strong>数据整合与治理</strong>：建立统一的数据平台，确保数据质量和安全，打破数据孤岛。</li>
+<li><strong>客户体验为中心</strong>：利用数字技术重新设计客户旅程，提供个性化、无缝的体验。</li>
+<li><strong>敏捷开发方法</strong>：采用敏捷和DevOps实践，加快产品迭代速度，提高响应市场变化的能力。</li>
+<li><strong>网络安全与合规</strong>：将安全考虑融入数字化转型的每个环节，而不是事后添加。</li>
+</ul>
+<p class="mt-3">我们公司在去年完成的数字化转型项目中，通过这些实践，成功将产品上市时间缩短了40%，客户满意度提高了25%。</p>
+</div>
+<div class="mt-4 text-sm text-gray-500">
+<p>来源：企业内部分享会《IT驱动的业务创新》，李娜，2025年2月20日</p>
+</div>
+<!-- 咨询对话按钮 -->
+<div class="mt-4 flex justify-end space-x-2">
+<button id="toggle-lina-consultation-btn" class="border border-gray-300 text-gray-600 px-4 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-gray-100 transition-colors">
+<i class="ri-arrow-down-s-line mr-2" id="toggle-lina-icon"></i>
+折叠
+</button>
+<button id="ask-lina-btn" class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap hover:bg-opacity-90 transition-colors">
+<i class="ri-question-answer-line mr-2"></i>
+进一步咨询
+</button>
+</div>
+<!-- 折叠的咨询内容 -->
+<div id="lina-consultation-preview" class="mt-3 bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+<div class="space-y-3">
+<div class="flex justify-end">
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md">
+<p>李娜，您好！我想了解一下在数字化转型过程中，如何有效地进行数据整合与治理？</p>
+<p class="text-xs text-white opacity-70 mt-1">2025-04-11 11:30</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=40&height=40&seq=2&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="李娜">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+<p>您好！数据整合与治理是数字化转型的核心环节，我建议从以下几个方面着手：</p>
+<ol class="list-decimal pl-5 mt-2 space-y-1">
+<li><strong>数据战略制定</strong>：明确数据如何支持业务目标</li>
+<li><strong>数据架构设计</strong>：建立统一的数据模型和标准</li>
+<li><strong>数据质量管理</strong>：实施数据清洗和验证机制</li>
+<li><strong>数据安全与隐私</strong>：确保合规和保护敏感信息</li>
+<li><strong>数据治理组织</strong>：建立跨部门的数据管理团队</li>
+</ol>
+<p class="mt-2">我们公司采用了数据湖架构，结合数据目录工具，大大提高了数据的可发现性和可用性。</p>
+<p class="text-xs text-gray-500 mt-1">2025-04-11 11:33</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 搜索结果卡片 3 -->
+<div class="search-result-card bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20man%20in%20casual%20business%20attire%2C%20tech%20company%20executive%2C%20neutral%20background%2C%20high%20quality%20portrait&width=100&height=100&seq=3&orientation=squarish" class="w-10 h-10 rounded-full object-cover" alt="王鹏">
+</div>
+<div class="ml-3">
+<p class="font-medium">王鹏</p>
+<p class="text-xs text-gray-500">技术创新负责人 | 2级关系</p>
+</div>
+</div>
+<div class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+可信度: 85%
+</div>
+</div>
+<div class="text-gray-700">
+<p class="mb-3">从创新角度看，成功的数字化转型最佳实践应关注：</p>
+<div class="space-y-3">
+<div>
+<h3 class="font-medium">1. 构建创新生态系统</h3>
+<p>与初创企业、学术机构和技术供应商建立合作伙伴关系，加速创新并获取外部专业知识。我们通过与三家AI初创公司的合作，在6个月内开发出了新一代智能客服系统。</p>
+</div>
+<div>
+<h3 class="font-medium">2. 建立数字创新实验室</h3>
+<p>设立专门的团队和空间，专注于探索新兴技术和商业模式，允许快速失败和学习。我们的数字实验室每季度至少产生两个可行的创新项目。</p>
+</div>
+<div>
+<h3 class="font-medium">3. 采用双速IT模式</h3>
+<p>一方面维护稳定的核心系统，另一方面快速开发和测试创新应用，两者协同发展。这种模式使我们能够在保持业务稳定的同时，快速响应市场变化。</p>
+</div>
+</div>
+<p class="mt-3">数字化转型不应仅仅是技术升级，而应该是商业模式的根本性创新。</p>
+</div>
+<div class="mt-4 text-sm text-gray-500">
+<p>来源：行业论坛演讲《数字时代的颠覆性创新》，王鹏，2025年1月10日</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 右侧关系图谱 -->
+<div class="w-1/5 border-l border-gray-200 p-4">
+<h2 class="text-lg font-medium mb-4">关系图谱</h2>
+<div class="relationship-graph bg-gray-50 rounded-lg p-4 h-96 mb-6">
+<div id="relationship-chart" class="w-full h-full"></div>
+</div>
+<div class="bg-blue-50 rounded-lg p-4" id="relationship-detail">
+<h3 class="text-sm font-medium mb-2" id="relationship-detail-name">张伟 - 详细关系</h3>
+<div class="space-y-3 text-sm">
+<div>
+<p class="text-gray-600">关系强度</p>
+<div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+<div class="bg-primary h-2 rounded-full" id="relationship-strength" style="width: 85%"></div>
+</div>
+</div>
+<div>
+<p class="text-gray-600">共同兴趣</p>
+<div class="flex flex-wrap gap-1 mt-1" id="common-interests">
+<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">数字战略</span>
+<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">人工智能</span>
+<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">数据分析</span>
+</div>
+</div>
+<div>
+<p class="text-gray-600">最近互动</p>
+<p class="text-gray-800" id="recent-interaction">2025-04-05 项目评审会议</p>
+</div>
+<div>
+<p class="text-gray-600">共同项目</p>
+<p class="text-gray-800" id="common-project">企业智能决策系统升级</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script>
+// 页面切换逻辑
+function showHomePage() {
+document.getElementById('home-page').classList.remove('hidden');
+document.getElementById('search-results-page').classList.add('hidden');
+}
+function showSearchResults() {
+document.getElementById('home-page').classList.add('hidden');
+document.getElementById('search-results-page').classList.remove('hidden');
+initRelationshipChart();
+initResultInteractions();
+}
+// 全局变量存储图表实例
+let relationshipChart;
+// 初始化关系图谱
+function initRelationshipChart(highlightPerson = '张伟') {
+const chartDom = document.getElementById('relationship-chart');
+if (relationshipChart) {
+relationshipChart.dispose();
+}
+relationshipChart = echarts.init(chartDom);
+// 基础数据
+const baseData = [
+{
+name: '您',
+symbolSize: 50,
+itemStyle: {
+color: '#4F46E5'
+},
+label: {
+show: true,
+position: 'right',
+formatter: '{b}',
+fontSize: 12
+}
+},
+{
+name: '张伟',
+symbolSize: 40,
+itemStyle: {
+color: 'rgba(87, 181, 231, 1)'
+}
+},
+{
+name: '李娜',
+symbolSize: 30,
+itemStyle: {
+color: 'rgba(141, 211, 199, 1)'
+}
+},
+{
+name: '王鹏',
+symbolSize: 30,
+itemStyle: {
+color: 'rgba(251, 191, 114, 1)'
+}
+},
+{
+name: '陈晓',
+symbolSize: 25,
+itemStyle: {
+color: 'rgba(252, 141, 98, 1)'
+}
+},
+{
+name: '林小明',
+symbolSize: 25,
+itemStyle: {
+color: 'rgba(141, 211, 199, 1)'
+}
+}
+];
+// 根据高亮人物调整数据
+const data = baseData.map(item => {
+if (item.name === highlightPerson) {
+return {
+...item,
+symbolSize: item.symbolSize * 1.2,
+itemStyle: {
+...item.itemStyle,
+shadowBlur: 10,
+shadowColor: 'rgba(0, 0, 0, 0.3)'
+}
+};
+}
+return item;
+});
+// 基础连接
+const baseLinks = [
+{
+source: '您',
+target: '张伟',
+lineStyle: {
+width: 5,
+color: 'rgba(87, 181, 231, 0.6)'
+}
+},
+{
+source: '您',
+target: '李娜',
+lineStyle: {
+width: 3,
+color: 'rgba(141, 211, 199, 0.6)'
+}
+},
+{
+source: '您',
+target: '王鹏',
+lineStyle: {
+width: 3,
+color: 'rgba(251, 191, 114, 0.6)'
+}
+},
+{
+source: '张伟',
+target: '陈晓',
+lineStyle: {
+width: 2,
+color: 'rgba(252, 141, 98, 0.6)'
+}
+},
+{
+source: '张伟',
+target: '林小明',
+lineStyle: {
+width: 2,
+color: 'rgba(141, 211, 199, 0.6)'
+}
+},
+{
+source: '李娜',
+target: '陈晓',
+lineStyle: {
+width: 1,
+color: 'rgba(252, 141, 98, 0.4)'
+}
+},
+{
+source: '王鹏',
+target: '林小明',
+lineStyle: {
+width: 1,
+color: 'rgba(141, 211, 199, 0.4)'
+}
+},
+{
+source: '李娜',
+target: '张伟',
+lineStyle: {
+width: 2,
+color: 'rgba(141, 211, 199, 0.5)'
+}
+}
+];
+// 根据高亮人物调整连接
+const links = baseLinks.map(link => {
+if (link.source === highlightPerson || link.target === highlightPerson) {
+return {
+...link,
+lineStyle: {
+...link.lineStyle,
+width: link.lineStyle.width * 1.5,
+opacity: 1
+}
+};
+}
+return link;
+});
+const option = {
+animation: false,
+tooltip: {
+trigger: 'item',
+backgroundColor: 'rgba(255, 255, 255, 0.9)',
+borderColor: '#eee',
+borderWidth: 1,
+textStyle: {
+color: '#1f2937'
+}
+},
+series: [
+{
+name: '社交关系网络',
+type: 'graph',
+layout: 'force',
+data: data,
+links: links,
+force: {
+repulsion: 200,
+edgeLength: 100
+},
+emphasis: {
+focus: 'adjacency',
+lineStyle: {
+width: 6
+}
+}
+}
+]
+};
+relationshipChart.setOption(option);
+window.addEventListener('resize', function() {
+relationshipChart.resize();
+});
+}
+// 关注按钮功能
+function initFollowButton() {
+const followBtn = document.getElementById('follow-btn');
+if (followBtn) {
+followBtn.addEventListener('click', function() {
+const followText = this.querySelector('.follow-text');
+const followingText = this.querySelector('.following-text');
+if (followText.classList.contains('hidden')) {
+// 取消关注
+followText.classList.remove('hidden');
+followingText.classList.add('hidden');
+this.classList.remove('bg-primary', 'text-white');
+this.classList.add('text-primary', 'border-primary');
+} else {
+// 关注
+followText.classList.add('hidden');
+followingText.classList.remove('hidden');
+this.classList.add('bg-primary', 'text-white');
+this.classList.remove('text-primary');
+// 显示关注成功提示
+showNotification('关注成功');
+}
+});
+}
+}
+// 消息对话框功能
+function initMessageButton() {
+const messageButtons = document.querySelectorAll('.ri-message-3-line');
+messageButtons.forEach(button => {
+const parentElement = button.closest('button');
+if (parentElement) {
+parentElement.addEventListener('click', function() {
+showMessageDialog('张伟');
+});
+}
+});
+}
+// 显示消息对话框
+function showMessageDialog(userName) {
+// 如果已有对话框，先移除
+const existingDialog = document.getElementById('message-dialog');
+if (existingDialog) {
+existingDialog.remove();
+}
+// 创建对话框
+const dialog = document.createElement('div');
+dialog.id = 'message-dialog';
+dialog.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-50 w-96';
+dialog.innerHTML = `
+<div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+<h3 class="font-medium">与 ${userName} 的对话</h3>
+<button id="close-dialog" class="text-gray-500 hover:text-gray-700">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="p-4 h-64 overflow-y-auto space-y-3">
+<div class="flex justify-start">
+<div class="bg-gray-100 rounded-lg px-3 py-2 max-w-xs">
+<p class="text-sm">你好，我看到你对数字化转型很有见解，能分享一下你的经验吗？</p>
+<p class="text-xs text-gray-500 mt-1">昨天 15:30</p>
+</div>
+</div>
+<div class="flex justify-end">
+<div class="bg-primary text-white rounded-lg px-3 py-2 max-w-xs">
+<p class="text-sm">当然可以，我认为成功的数字化转型需要从战略、人才和技术三个维度同步推进。</p>
+<p class="text-xs text-white opacity-70 mt-1">昨天 16:05</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="bg-gray-100 rounded-lg px-3 py-2 max-w-xs">
+<p class="text-sm">你能推荐一些相关的资料或案例吗？</p>
+<p class="text-xs text-gray-500 mt-1">昨天 16:20</p>
+</div>
+</div>
+</div>
+<div class="border-t border-gray-200 p-3">
+<div class="flex items-center">
+<input type="text" class="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-primary" placeholder="输入消息...">
+<button class="ml-2 w-8 h-8 flex items-center justify-center text-primary hover:bg-primary hover:text-white rounded-full transition-colors">
+<i class="ri-send-plane-fill"></i>
+</button>
+</div>
+</div>
+`;
+// 添加遮罩层
+const overlay = document.createElement('div');
+overlay.id = 'dialog-overlay';
+overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40';
+document.body.appendChild(overlay);
+document.body.appendChild(dialog);
+// 关闭对话框
+document.getElementById('close-dialog').addEventListener('click', function() {
+dialog.remove();
+overlay.remove();
+});
+overlay.addEventListener('click', function() {
+dialog.remove();
+overlay.remove();
+});
+}
+// 显示通知
+function showNotification(message) {
+// 如果已有通知，先移除
+const existingNotification = document.getElementById('notification');
+if (existingNotification) {
+existingNotification.remove();
+}
+const notification = document.createElement('div');
+notification.id = 'notification';
+notification.className = 'fixed top-4 right-4 bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-md z-50 flex items-center';
+notification.innerHTML = `
+<i class="ri-check-line ri-lg mr-2 text-green-600"></i>
+<span>${message}</span>
+`;
+// 添加初始样式
+notification.style.opacity = '0';
+notification.style.transform = 'translateX(20px)';
+notification.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+document.body.appendChild(notification);
+// 显示通知
+setTimeout(() => {
+notification.style.opacity = '1';
+notification.style.transform = 'translateX(0)';
+}, 10);
+// 3秒后隐藏通知
+setTimeout(() => {
+notification.style.opacity = '0';
+notification.style.transform = 'translateX(20px)';
+setTimeout(() => {
+notification.remove();
+}, 300);
+}, 3000);
+}
+// 咨询对话框功能
+function initConsultationDialog() {
+const askMoreBtn = document.getElementById('ask-more-btn');
+if (askMoreBtn) {
+askMoreBtn.addEventListener('click', function() {
+toggleConsultationDialog(true);
+// 添加动画效果
+const dialog = document.getElementById('consultation-dialog');
+if (dialog) {
+dialog.classList.add('animate-fade-in');
+setTimeout(() => {
+dialog.classList.remove('animate-fade-in');
+}, 300);
+}
+});
+}
+const closeConsultation = document.getElementById('close-consultation');
+if (closeConsultation) {
+closeConsultation.addEventListener('click', function() {
+// 添加动画效果
+const dialog = document.getElementById('consultation-dialog');
+if (dialog) {
+dialog.classList.add('animate-fade-out');
+setTimeout(() => {
+toggleConsultationDialog(false);
+dialog.classList.remove('animate-fade-out');
+}, 200);
+} else {
+toggleConsultationDialog(false);
+}
+});
+}
+const consultationDialog = document.getElementById('consultation-dialog');
+if (consultationDialog) {
+consultationDialog.addEventListener('click', function(e) {
+if (e.target === this) {
+// 添加动画效果
+this.classList.add('animate-fade-out');
+setTimeout(() => {
+toggleConsultationDialog(false);
+this.classList.remove('animate-fade-out');
+}, 200);
+}
+});
+}
+const sendConsultation = document.getElementById('send-consultation');
+if (sendConsultation) {
+sendConsultation.addEventListener('click', sendConsultationMessage);
+}
+const consultationInput = document.getElementById('consultation-input');
+if (consultationInput) {
+consultationInput.addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+sendConsultationMessage();
+}
+});
+}
+// 为折叠按钮添加事件
+const toggleConsultationBtn = document.getElementById('toggle-consultation-btn');
+if (toggleConsultationBtn) {
+toggleConsultationBtn.addEventListener('click', function() {
+const preview = document.getElementById('consultation-preview');
+const icon = document.getElementById('toggle-icon');
+if (preview.classList.contains('hidden')) {
+preview.classList.remove('hidden');
+icon.classList.remove('ri-arrow-down-s-line');
+icon.classList.add('ri-arrow-up-s-line');
+this.textContent = '';
+this.appendChild(icon);
+this.appendChild(document.createTextNode(' 收起'));
+} else {
+preview.classList.add('hidden');
+icon.classList.remove('ri-arrow-up-s-line');
+icon.classList.add('ri-arrow-down-s-line');
+this.textContent = '';
+this.appendChild(icon);
+this.appendChild(document.createTextNode(' 折叠'));
+}
+});
+}
+}
+function toggleConsultationDialog(show) {
+const dialog = document.getElementById('consultation-dialog');
+if (dialog) {
+if (show) {
+dialog.classList.remove('hidden');
+document.getElementById('consultation-input').focus();
+// 添加滑入效果
+const dialogContent = dialog.querySelector('.bg-white');
+if (dialogContent) {
+dialogContent.classList.add('animate-slide-in');
+setTimeout(() => {
+dialogContent.classList.remove('animate-slide-in');
+}, 300);
+}
+} else {
+dialog.classList.add('hidden');
+}
+}
+}
+function sendConsultationMessage() {
+const input = document.getElementById('consultation-input');
+const messagesContainer = document.getElementById('consultation-messages');
+if (!input || !messagesContainer || !input.value.trim()) return;
+const now = new Date();
+const timeString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+// 添加用户消息
+const userMessage = document.createElement('div');
+userMessage.className = 'flex justify-end';
+userMessage.innerHTML = `
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md animate-slide-in">
+<p>${input.value}</p>
+<p class="text-xs text-white opacity-70 mt-1">${timeString}</p>
+</div>
+`;
+messagesContainer.appendChild(userMessage);
+// 清空输入框
+const userQuestion = input.value;
+input.value = '';
+// 滚动到底部
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// 添加"正在输入"指示器
+const typingIndicator = document.createElement('div');
+typingIndicator.id = 'typing-indicator';
+typingIndicator.className = 'flex justify-start mt-2';
+typingIndicator.innerHTML = `
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="张伟">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-2 max-w-md">
+<div class="flex space-x-1">
+<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+</div>
+</div>
+</div>
+`;
+messagesContainer.appendChild(typingIndicator);
+// 滚动到底部
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// 模拟回复
+setTimeout(() => {
+// 移除"正在输入"指示器
+const indicator = document.getElementById('typing-indicator');
+if (indicator) {
+indicator.remove();
+}
+const expertMessage = document.createElement('div');
+expertMessage.className = 'flex justify-start';
+expertMessage.innerHTML = `
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-blue-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20asian%20man%20with%20glasses%20in%20business%20attire%2C%20high%20quality%20portrait%2C%20neutral%20background%2C%20professional%20headshot&width=40&height=40&seq=1&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="张伟">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md animate-slide-in">
+<p>感谢您的问题。我需要一些时间来准备详细的回答，稍后会回复您。同时，您可以查看我们的数字化转型白皮书，其中包含了许多实用的案例和方法论。</p>
+<p class="text-xs text-gray-500 mt-1">${timeString}</p>
+</div>
+</div>
+`;
+messagesContainer.appendChild(expertMessage);
+// 滚动到底部
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// 显示通知
+showNotification('消息已发送，专家将尽快回复');
+}, 1500);
+}
+// 为首页搜索按钮添加事件监听
+document.getElementById('search-button').addEventListener('click', showSearchResults);
+// 为首页搜索框添加回车键事件监听
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+showSearchResults();
+}
+});
+// 初始化搜索结果交互
+function initResultInteractions() {
+// 为李娜的搜索结果添加点击事件
+const linaResult = document.getElementById('lina-result');
+if (linaResult) {
+linaResult.addEventListener('click', function(e) {
+// 如果点击的是按钮，不触发卡片点击事件
+if (e.target.closest('button')) return;
+// 高亮左侧李娜节点
+const linaNode = document.getElementById('lina-node');
+// 移除所有节点的高亮
+document.querySelectorAll('.relationship-node').forEach(node => {
+node.classList.remove('bg-blue-50', 'bg-green-50', 'border-l-4', 'border-primary');
+});
+// 添加李娜节点的高亮
+linaNode.classList.add('bg-green-50', 'border-l-4', 'border-primary');
+// 更新右侧关系图谱
+initRelationshipChart('李娜');
+// 更新右侧详细关系信息
+updateRelationshipDetail('李娜', '70%', ['IT战略', '数据治理', '敏捷开发'], '2025-03-18 技术研讨会', 'IT基础设施现代化');
+});
+}
+// 为李娜的咨询按钮添加事件
+const askLinaBtn = document.getElementById('ask-lina-btn');
+if (askLinaBtn) {
+askLinaBtn.addEventListener('click', function() {
+showLinaConsultationDialog();
+});
+}
+// 为李娜的折叠按钮添加事件
+const toggleLinaConsultationBtn = document.getElementById('toggle-lina-consultation-btn');
+if (toggleLinaConsultationBtn) {
+toggleLinaConsultationBtn.addEventListener('click', function() {
+const preview = document.getElementById('lina-consultation-preview');
+const icon = document.getElementById('toggle-lina-icon');
+if (preview.classList.contains('hidden')) {
+preview.classList.remove('hidden');
+this.querySelector('i').classList.remove('ri-arrow-down-s-line');
+this.querySelector('i').classList.add('ri-arrow-up-s-line');
+this.textContent = '';
+this.appendChild(icon);
+this.appendChild(document.createTextNode(' 收起'));
+} else {
+preview.classList.add('hidden');
+this.querySelector('i').classList.remove('ri-arrow-up-s-line');
+this.querySelector('i').classList.add('ri-arrow-down-s-line');
+this.textContent = '';
+this.appendChild(icon);
+this.appendChild(document.createTextNode(' 折叠'));
+}
+});
+}
+// 为张伟的搜索结果添加点击事件
+const zhangweiResult = document.querySelector('.search-result-card:first-of-type');
+if (zhangweiResult) {
+zhangweiResult.addEventListener('click', function(e) {
+// 如果点击的是按钮，不触发卡片点击事件
+if (e.target.closest('button')) return;
+// 移除所有节点的高亮
+document.querySelectorAll('.relationship-node').forEach(node => {
+node.classList.remove('bg-blue-50', 'bg-green-50', 'border-l-4', 'border-primary');
+});
+// 添加张伟节点的高亮
+document.querySelector('.relationship-node:first-of-type').classList.add('bg-blue-50', 'border-l-4', 'border-primary');
+// 更新右侧关系图谱
+initRelationshipChart('张伟');
+// 更新右侧详细关系信息
+updateRelationshipDetail('张伟', '85%', ['数字战略', '人工智能', '数据分析'], '2025-04-05 项目评审会议', '企业智能决策系统升级');
+});
+}
+// 为王鹏的搜索结果添加点击事件
+const wangpengResult = document.querySelector('.search-result-card:nth-of-type(3)');
+if (wangpengResult) {
+wangpengResult.addEventListener('click', function() {
+// 移除所有节点的高亮
+document.querySelectorAll('.relationship-node').forEach(node => {
+node.classList.remove('bg-blue-50', 'bg-green-50', 'border-l-4', 'border-primary');
+});
+// 添加王鹏节点的高亮
+document.querySelector('.relationship-node:nth-of-type(3)').classList.add('bg-purple-50', 'border-l-4', 'border-primary');
+// 更新右侧关系图谱
+initRelationshipChart('王鹏');
+// 更新右侧详细关系信息
+updateRelationshipDetail('王鹏', '65%', ['技术创新', '人工智能', '创新生态'], '2025-03-10 创新研讨会', '数字创新实验室项目');
+});
+}
+// 为陈晓节点添加点击事件
+const chenxiaoNode = document.querySelector('.relationship-node:nth-of-type(4)');
+if (chenxiaoNode) {
+chenxiaoNode.addEventListener('click', function() {
+// 移除所有节点的高亮
+document.querySelectorAll('.relationship-node').forEach(node => {
+node.classList.remove('bg-blue-50', 'bg-green-50', 'bg-purple-50', 'border-l-4', 'border-primary');
+});
+// 添加陈晓节点的高亮
+this.classList.add('bg-yellow-50', 'border-l-4', 'border-primary');
+// 更新右侧关系图谱
+initRelationshipChart('陈晓');
+// 更新右侧详细关系信息
+updateRelationshipDetail('陈晓', '60%', ['变革管理', '组织发展', '数字文化'], '2025-03-25 变革管理研讨会', '企业文化数字化转型');
+});
+}
+// 为林小明节点添加点击事件
+const linxiaomingNode = document.querySelector('.relationship-node:nth-of-type(5)');
+if (linxiaomingNode) {
+linxiaomingNode.addEventListener('click', function() {
+// 移除所有节点的高亮
+document.querySelectorAll('.relationship-node').forEach(node => {
+node.classList.remove('bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-yellow-50', 'border-l-4', 'border-primary');
+});
+// 添加林小明节点的高亮
+this.classList.add('bg-red-50', 'border-l-4', 'border-primary');
+// 更新右侧关系图谱
+initRelationshipChart('林小明');
+// 更新右侧详细关系信息
+updateRelationshipDetail('林小明', '75%', ['数据分析', '机器学习', '商业智能'], '2025-04-02 数据分析研讨会', '企业数据分析平台建设');
+});
+}
+}
+// 更新关系详情
+function updateRelationshipDetail(name, strength, interests, interaction, project) {
+document.getElementById('relationship-detail-name').textContent = `${name} - 详细关系`;
+document.getElementById('relationship-strength').style.width = strength;
+// 更新共同兴趣
+const interestsContainer = document.getElementById('common-interests');
+interestsContainer.innerHTML = '';
+interests.forEach(interest => {
+const span = document.createElement('span');
+span.className = 'bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs';
+span.textContent = interest;
+interestsContainer.appendChild(span);
+});
+// 更新最近互动和共同项目
+document.getElementById('recent-interaction').textContent = interaction;
+document.getElementById('common-project').textContent = project;
+}
+// 显示李娜的咨询对话框
+function showLinaConsultationDialog() {
+// 创建对话框
+const dialog = document.createElement('div');
+dialog.id = 'lina-consultation-dialog';
+dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in';
+dialog.innerHTML = `
+<div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 animate-slide-in">
+<div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+<h3 class="text-lg font-medium">与李娜的对话</h3>
+<button id="close-lina-consultation" class="text-gray-500 hover:text-gray-700 w-8 h-8 flex items-center justify-center">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+<div class="p-6 h-96 overflow-y-auto space-y-4" id="lina-consultation-messages">
+<!-- 对话内容 -->
+<div class="flex justify-end">
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md">
+<p>李娜，您好！我想了解一下在数字化转型过程中，如何有效地进行数据整合与治理？</p>
+<p class="text-xs text-white opacity-70 mt-1">2025-04-11 11:30</p>
+</div>
+</div>
+<div class="flex justify-start">
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=40&height=40&seq=2&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="李娜">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md">
+<p>您好！数据整合与治理是数字化转型的核心环节，我建议从以下几个方面着手：</p>
+<ol class="list-decimal pl-5 mt-2 space-y-1">
+<li><strong>数据战略制定</strong>：明确数据如何支持业务目标</li>
+<li><strong>数据架构设计</strong>：建立统一的数据模型和标准</li>
+<li><strong>数据质量管理</strong>：实施数据清洗和验证机制</li>
+<li><strong>数据安全与隐私</strong>：确保合规和保护敏感信息</li>
+<li><strong>数据治理组织</strong>：建立跨部门的数据管理团队</li>
+</ol>
+<p class="mt-2">我们公司采用了数据湖架构，结合数据目录工具，大大提高了数据的可发现性和可用性。</p>
+<p class="text-xs text-gray-500 mt-1">2025-04-11 11:33</p>
+</div>
+</div>
+</div>
+</div>
+<div class="border-t border-gray-200 px-6 py-4">
+<div class="flex items-center">
+<input type="text" id="lina-consultation-input" class="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-primary" placeholder="输入您的问题...">
+<button id="send-lina-consultation" class="ml-2 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-90 transition-colors">
+<i class="ri-send-plane-fill"></i>
+</button>
+</div>
+</div>
+</div>
+`;
+document.body.appendChild(dialog);
+// 关闭对话框
+document.getElementById('close-lina-consultation').addEventListener('click', function() {
+dialog.classList.add('animate-fade-out');
+const dialogContent = dialog.querySelector('.bg-white');
+if (dialogContent) {
+dialogContent.classList.add('animate-slide-out');
+}
+setTimeout(() => {
+dialog.remove();
+}, 300);
+});
+// 点击背景关闭
+dialog.addEventListener('click', function(e) {
+if (e.target === this) {
+dialog.classList.add('animate-fade-out');
+const dialogContent = dialog.querySelector('.bg-white');
+if (dialogContent) {
+dialogContent.classList.add('animate-slide-out');
+}
+setTimeout(() => {
+dialog.remove();
+}, 300);
+}
+});
+// 发送消息
+document.getElementById('send-lina-consultation').addEventListener('click', sendLinaMessage);
+document.getElementById('lina-consultation-input').addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+sendLinaMessage();
+}
+});
+// 自动聚焦输入框
+setTimeout(() => {
+document.getElementById('lina-consultation-input').focus();
+}, 300);
+}
+// 发送给李娜的消息
+function sendLinaMessage() {
+const input = document.getElementById('lina-consultation-input');
+const messagesContainer = document.getElementById('lina-consultation-messages');
+if (!input || !messagesContainer || !input.value.trim()) return;
+const now = new Date();
+const timeString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+// 添加用户消息
+const userMessage = document.createElement('div');
+userMessage.className = 'flex justify-end';
+userMessage.innerHTML = `
+<div class="bg-primary text-white rounded-lg px-4 py-3 max-w-md animate-slide-in">
+<p>${input.value}</p>
+<p class="text-xs text-white opacity-70 mt-1">${timeString}</p>
+</div>
+`;
+messagesContainer.appendChild(userMessage);
+// 清空输入框
+const userQuestion = input.value;
+input.value = '';
+// 滚动到底部
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// 添加"正在输入"指示器
+const typingIndicator = document.createElement('div');
+typingIndicator.id = 'lina-typing-indicator';
+typingIndicator.className = 'flex justify-start mt-2';
+typingIndicator.innerHTML = `
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=40&height=40&seq=2&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="李娜">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-2 max-w-md">
+<div class="flex space-x-1">
+<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+<div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+</div>
+</div>
+</div>
+`;
+messagesContainer.appendChild(typingIndicator);
+// 滚动到底部
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// 模拟回复
+setTimeout(() => {
+// 移除"正在输入"指示器
+const indicator = document.getElementById('lina-typing-indicator');
+if (indicator) {
+indicator.remove();
+}
+const expertMessage = document.createElement('div');
+expertMessage.className = 'flex justify-start';
+expertMessage.innerHTML = `
+<div class="flex items-start">
+<div class="w-8 h-8 rounded-full bg-green-100 flex-shrink-0 mr-2 flex items-center justify-center">
+<img src="https://readdy.ai/api/search-image?query=professional%20chinese%20woman%20in%20business%20suit%2C%20confident%20smile%2C%20corporate%20headshot%2C%20neutral%20background%2C%20high%20quality%20portrait&width=40&height=40&seq=2&orientation=squarish" class="w-8 h-8 rounded-full object-cover" alt="李娜">
+</div>
+<div class="bg-gray-100 rounded-lg px-4 py-3 max-w-md animate-slide-in">
+<p>感谢您的问题。我会尽快给您详细的回复。同时，您可以查看我们最近发布的《IT驱动的业务创新》白皮书，其中包含了许多关于数字化转型的实用案例。</p>
+<p class="text-xs text-gray-500 mt-1">${timeString}</p>
+</div>
+</div>
+`;
+messagesContainer.appendChild(expertMessage);
+// 滚动到底部
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// 显示通知
+showNotification('消息已发送，李娜将尽快回复');
+}, 1500);
+}
+// 页面加载完成后初始化按钮功能
+document.addEventListener('DOMContentLoaded', function() {
+// 初始化关注按钮和消息按钮
+document.getElementById('search-button').addEventListener('click', function() {
+// 延迟一点执行，确保DOM已更新
+setTimeout(() => {
+initFollowButton();
+initMessageButton();
+initConsultationDialog();
+initResultInteractions();
+// 为左侧社交关系链的节点添加点击事件
+initRelationshipNodeEvents();
+// 初始化折叠按钮图标
+const toggleIcon = document.getElementById('toggle-icon');
+if (toggleIcon) {
+toggleIcon.className = 'ri-arrow-down-s-line mr-2';
+}
+const toggleLinaIcon = document.getElementById('toggle-lina-icon');
+if (toggleLinaIcon) {
+toggleLinaIcon.className = 'ri-arrow-down-s-line mr-2';
+}
+}, 100);
+});
+});
+// 初始化左侧社交关系链节点的点击事件
+function initRelationshipNodeEvents() {
+// 获取所有关系节点
+const relationshipNodes = document.querySelectorAll('.relationship-node');
+// 为每个节点添加点击事件
+relationshipNodes.forEach((node, index) => {
+node.addEventListener('click', function() {
+// 获取人名
+const name = this.querySelector('.font-medium').textContent;
+// 移除所有节点的高亮
+document.querySelectorAll('.relationship-node').forEach(n => {
+n.classList.remove('bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-yellow-50', 'bg-red-50', 'border-l-4', 'border-primary');
+});
+// 添加当前节点的高亮
+let bgColor = 'bg-blue-50';
+if (index === 1) bgColor = 'bg-green-50';
+if (index === 2) bgColor = 'bg-purple-50';
+if (index === 3) bgColor = 'bg-yellow-50';
+if (index === 4) bgColor = 'bg-red-50';
+this.classList.add(bgColor, 'border-l-4', 'border-primary');
+// 更新右侧关系图谱
+initRelationshipChart(name);
+// 更新右侧详细关系信息
+if (name === '张伟') {
+updateRelationshipDetail('张伟', '85%', ['数字战略', '人工智能', '数据分析'], '2025-04-05 项目评审会议', '企业智能决策系统升级');
+} else if (name === '李娜') {
+updateRelationshipDetail('李娜', '70%', ['IT战略', '数据治理', '敏捷开发'], '2025-03-18 技术研讨会', 'IT基础设施现代化');
+} else if (name === '王鹏') {
+updateRelationshipDetail('王鹏', '65%', ['技术创新', '人工智能', '创新生态'], '2025-03-10 创新研讨会', '数字创新实验室项目');
+} else if (name === '陈晓') {
+updateRelationshipDetail('陈晓', '60%', ['变革管理', '组织发展', '数字文化'], '2025-03-25 变革管理研讨会', '企业文化数字化转型');
+} else if (name === '林小明') {
+updateRelationshipDetail('林小明', '75%', ['数据分析', '机器学习', '商业智能'], '2025-04-02 数据分析研讨会', '企业数据分析平台建设');
+}
+});
+});
+}
+</script>
+</body>
+</html>
