@@ -211,7 +211,7 @@ AI舆情引擎的技术架构基于TuGraph的图计算平台，结合时序图�
 
 徐维挺（Vito）18017325596
 A脑创始人 时序图谱洞察引擎开源发起人
-浙江借物网络科技有限公司 AIreadsU@outlook.com (http://www.AIreadsU.com)
+AIreadsU@outlook.com (http://www.AIreadsU.com)
 
 
 ![image](https://github.com/user-attachments/assets/cee92aee-2fe8-45c7-a141-ebfd2f4a8c7f)
